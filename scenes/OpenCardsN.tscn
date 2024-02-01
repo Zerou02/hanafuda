@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://b43uej1y6p63i"]
+
+[ext_resource type="Script" path="res://scripts/ui/OpenCardsN.cs" id="1_c2kew"]
+
+[node name="OpenCardsN" type="Node2D"]
+script = ExtResource("1_c2kew")

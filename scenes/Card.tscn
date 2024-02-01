@@ -1,0 +1,54 @@
+[gd_scene load_steps=10 format=3 uid="uid://be7tmewgmhgaq"]
+
+[ext_resource type="Script" path="res://scripts/ui/CardScn.cs" id="1_gu2cp"]
+[ext_resource type="Texture2D" uid="uid://wo7qxvctb7iu" path="res://minosGD/assets/smallerCardBack.png" id="2_k7v3l"]
+[ext_resource type="Shader" path="res://minosGD/shader/cardSelection.gdshader" id="4_w3r5s"]
+[ext_resource type="Texture2D" uid="uid://dgey5lx1jt2mv" path="res://minosGD/assets/Tex_Mask_CardOutline.png" id="5_yqw8e"]
+[ext_resource type="Texture2D" uid="uid://544wo4yms4dn" path="res://minosGD/assets/Tex_CloudsColorHover.png" id="6_nsxsr"]
+[ext_resource type="Texture2D" uid="uid://b4ylhf7x8i7om" path="res://minosGD/assets/Tex_Flowmap_Withnoise.png" id="6_o20md"]
+[ext_resource type="Texture2D" uid="uid://bh3238lbl442p" path="res://minosGD/assets/Tex_CloudsColor.png" id="7_ymh66"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_8cd5i"]
+shader = ExtResource("4_w3r5s")
+shader_parameter/blendTex = ExtResource("5_yqw8e")
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_y5g5i"]
+size = Vector2(31, 49)
+
+[node name="Card" type="Node2D"]
+script = ExtResource("1_gu2cp")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(9.53674e-07, 1.90735e-06)
+scale = Vector2(0.442857, 0.429825)
+texture = ExtResource("2_k7v3l")
+offset = Vector2(35, 56)
+region_enabled = true
+region_rect = Rect2(0, 0, 70, 112)
+
+[node name="ValidTexture" type="Sprite2D" parent="."]
+visible = false
+material = SubResource("ShaderMaterial_8cd5i")
+position = Vector2(15.5, 24.5)
+scale = Vector2(0.152344, 0.230469)
+texture = ExtResource("6_o20md")
+
+[node name="SelectTexture" type="Sprite2D" parent="."]
+visible = false
+material = SubResource("ShaderMaterial_8cd5i")
+position = Vector2(15.5, 24.5)
+scale = Vector2(0.0761719, 0.115234)
+texture = ExtResource("6_nsxsr")
+
+[node name="HoverTexture" type="Sprite2D" parent="."]
+visible = false
+material = SubResource("ShaderMaterial_8cd5i")
+position = Vector2(15.5, 24.5)
+scale = Vector2(0.0761719, 0.115234)
+texture = ExtResource("7_ymh66")
+
+[node name="Area2D" type="Area2D" parent="."]
+position = Vector2(15.5, 24.5)
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("RectangleShape2D_y5g5i")

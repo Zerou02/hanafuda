@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bvy3tcfg16tyh"]
+
+[ext_resource type="Script" path="res://scripts/logic/InputManager.cs" id="1_fwgpg"]
+
+[node name="InputManager" type="Node"]
+script = ExtResource("1_fwgpg")

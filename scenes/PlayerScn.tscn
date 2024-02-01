@@ -1,0 +1,13 @@
+[gd_scene load_steps=4 format=3 uid="uid://bpnpkalgs0wrr"]
+
+[ext_resource type="Script" path="res://scripts/ui/PlayerScn.cs" id="1_ishvp"]
+[ext_resource type="PackedScene" uid="uid://boqxbs4ru8tc" path="res://scenes/HandScn.tscn" id="3_1n4pb"]
+[ext_resource type="PackedScene" uid="uid://b43uej1y6p63i" path="res://scenes/OpenCardsN.tscn" id="3_cnw4x"]
+
+[node name="PlayerScn" type="Node2D"]
+script = ExtResource("1_ishvp")
+
+[node name="HandScn" parent="." instance=ExtResource("3_1n4pb")]
+position = Vector2(1, 220)
+
+[node name="OpenCards" parent="." instance=ExtResource("3_cnw4x")]

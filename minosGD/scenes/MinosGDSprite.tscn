@@ -1,0 +1,36 @@
+[gd_scene load_steps=8 format=3 uid="uid://brpmuaff6i7h"]
+
+[ext_resource type="Texture2D" uid="uid://w8f5spmoqqdf" path="res://icon.svg" id="1_3y0t3"]
+[ext_resource type="Script" path="res://minosGD/scripts/MinosGDSprite.cs" id="2_0ff5k"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_vdoun"]
+size = Vector2(128, 128)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_ihihc"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_rrk0k"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_m86bq"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_qimjm"]
+
+[node name="Sprite2D" type="Sprite2D"]
+texture = ExtResource("1_3y0t3")
+script = ExtResource("2_0ff5k")
+
+[node name="Area2D" type="Area2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("RectangleShape2D_vdoun")
+
+[node name="Button" type="Button" parent="."]
+offset_right = 70.0
+offset_bottom = 112.0
+mouse_filter = 1
+mouse_force_pass_scroll_events = false
+theme_override_styles/hover = SubResource("StyleBoxEmpty_ihihc")
+theme_override_styles/pressed = SubResource("StyleBoxEmpty_rrk0k")
+theme_override_styles/disabled = SubResource("StyleBoxEmpty_m86bq")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_qimjm")
+flat = true
+metadata/_edit_use_anchors_ = true
