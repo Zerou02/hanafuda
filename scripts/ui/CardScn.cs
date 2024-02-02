@@ -1,4 +1,6 @@
 using Godot;
+
+public enum CardType { Deck, Hand, Open, Table, None };
 public partial class CardScn : Node2D
 {
 	public Sprite2D sprite2D;
@@ -12,6 +14,7 @@ public partial class CardScn : Node2D
 	public bool isOpen = true;
 	public bool allowHover = true;
 	public bool allowSelectable = true;
+	public bool allowClickable = true;
 
 	[Signal]
 	public delegate void pressedEventHandler(CardScn card);
@@ -19,6 +22,8 @@ public partial class CardScn : Node2D
 	Texture2D closedTex = ResourceLoader.Load<CompressedTexture2D>("res://assets/smallerCardBack.png");
 	Texture2D openTex = ResourceLoader.Load<CompressedTexture2D>("res://assets/cards.png");
 
+	public CardType type = CardType.None;
+	public InputManager inputManager;
 	public override void _Ready()
 	{
 		sprite2D = GetNode<Sprite2D>("Sprite2D");
@@ -26,12 +31,10 @@ public partial class CardScn : Node2D
 		selectTexture = GetNode<Sprite2D>("SelectTexture");
 		hoverTexture = GetNode<Sprite2D>("HoverTexture");
 		validTexture = GetNode<Sprite2D>("ValidTexture");
-
-		setCard(new Card(0, 0));
-		setSelected(false);
-		setHover(false);
+		inputManager = GetNode<InputManager>(Constants.inputManagerPath);
+		setCard(new Card(2, 0));
 		area2D.MouseEntered += () => { if (allowHover) { setHover(true); } };
-		area2D.MouseExited += () => { if (allowSelectable) { setHover(false); } };
+		area2D.MouseExited += () => setHover(false);
 	}
 
 	public void setCard(Card card)
@@ -45,6 +48,7 @@ public partial class CardScn : Node2D
 		if (!this.isOpen || !card.isValid())
 		{
 			this.sprite2D.Texture = closedTex;
+			setRegionPos(0, 0);
 		}
 		else
 		{
@@ -58,23 +62,12 @@ public partial class CardScn : Node2D
 			setRegionPos(0, 0);
 			moveRegionRectSteps(column, row);
 			moveRegionRect(paddingX * column, paddingY * row);
-
-			//selectTexture.Position = sprite2D.Offset;
-			//hoverTexture.Position = sprite2D.Offset;
-			//validTexture.Position = sprite2D.Offset;
 		}
 	}
 
 	public override void _Process(double delta)
 	{
-		if (this.isOpen && card.isValid())
-		{
-			this.sprite2D.Texture = openTex;
-		}
-		else
-		{
-			this.sprite2D.Texture = closedTex;
-		}
+		setImage();
 		this.selectTexture.Visible = this.isSelected;
 	}
 
@@ -87,8 +80,9 @@ public partial class CardScn : Node2D
 			var pos = ToLocal(mouseEvent!.Position);
 			//var rect = this.sprite2D.GetRect();
 			//rect = new Rect2(rect.Position, rect.Size * sprite2D.Scale);
-			if (mouseEvent.IsPressed() && sprite2D.GetScaledRect().HasPoint(pos))
+			if (mouseEvent.IsPressed() && sprite2D.GetScaledRect().HasPoint(pos) && allowClickable)
 			{
+				GD.Print(card.type);
 				EmitSignal(SignalName.pressed, this);
 			}
 		}
@@ -96,7 +90,7 @@ public partial class CardScn : Node2D
 
 	public void setSelected(bool val)
 	{
-		if (!allowSelectable) { return; }
+		if (!allowSelectable && val) { return; }
 		this.isSelected = val;
 		selectTexture.Visible = val;
 	}
@@ -111,7 +105,12 @@ public partial class CardScn : Node2D
 	{
 		setAllowHover(val);
 		setAllowSelectable(val);
-		if (!val) { setHover(false); setValid(false); setSelected(false); }
+		if (!val)
+		{
+			setHover(false);
+			setValid(false);
+			setSelected(false);
+		}
 	}
 	public void setAllowHover(bool val)
 	{

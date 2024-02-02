@@ -4,7 +4,6 @@ using Godot;
 public partial class HandScn : Node2D
 {
     public List<CardScn> cardScns = new List<CardScn>();
-    public Player player;
     public Rect2 bounds = new Rect2(0, 0, 800, 200);
     InputManager inputManager;
 
@@ -41,7 +40,8 @@ public partial class HandScn : Node2D
     {
         Utils.reparentTo(cardScn, this);
         this.cardScns.Add(cardScn);
-        cardScn.pressed += (x) => inputManager.handCardSelected(x, player.id);
+        cardScn.setCard(cardScn.card);
+        cardScn.pressed += (x) => inputManager.handCardSelected(x);
         Flexbox.alignLeft(bounds, this.cardScns);
     }
 

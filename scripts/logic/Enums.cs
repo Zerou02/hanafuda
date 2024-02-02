@@ -3,4 +3,4 @@ public enum Types { Plain, Scroll, BlueScroll, PoetryScroll, Animal, Butterfly, 
 public enum Sets { Plain, Scrolls, Animals, BlueScrolls, PoetryScrolls, InoShikaChou, Tsukimi, Hanami, Sankou, Ameshikou, Shikou, Gokou }
 public enum FlexboxModes { LeftAligned };
 
-public enum MessageType { InitGame }
+public enum MessageType { InitGame, InitDeck, MoveCard, MatchTableCard, MatchEmptyTableCard, StartDeckTurn }

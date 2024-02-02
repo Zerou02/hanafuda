@@ -1,23 +1,22 @@
 using Godot;
-using System;
 using System.Collections.Generic;
-using System.Formats.Asn1;
-using System.Reflection;
 using System.Threading;
-
 
 public enum UiModes { PlayerTurn, DeckTurn };
 public partial class UiManager : Node2D
 {
-    public GameManager gameManager;
     DeckScn deck;
     TableCardsN tableCards;
-    PlayerScn[] players = new PlayerScn[2];
-    PlayerScn activePlayer;
+    public PlayerScn[] players = new PlayerScn[2];
+    public PlayerScn activePlayer;
     public int ownID = -1;
+    public int activePlayerId = 0;
     public UiModes uiMode = UiModes.PlayerTurn;
     Label label;
 
+    PackedScene cardScn = GD.Load<PackedScene>("scenes/Card.tscn");
+    InputManager inputManager;
+    public Lobby server;
     public override void _Ready()
     {
         label = GetNode<Label>("Label");
@@ -25,6 +24,8 @@ public partial class UiManager : Node2D
         tableCards = GetNode<TableCardsN>("TableCardsN");
         players[0] = GetNode<PlayerScn>("Player");
         players[1] = GetNode<PlayerScn>("Player2");
+        inputManager = GetNode<InputManager>(Constants.inputManagerPath);
+        inputManager.uiManager = this;
         //        tableCards.emptyCardPressed += (idx) => handleEmptyCardPressed(idx);
         // tableCards.flowerCardPressed += (cardScn) => handleHanafudaTableCardPressed(cardScn);
         foreach (var x in players)
@@ -38,146 +39,53 @@ public partial class UiManager : Node2D
         if (uiMode == UiModes.DeckTurn) { return; }
         //        highlightTableCards();
     }
-    /* public void handleHanafudaTableCardPressed(CardScn cardScn)
-    {
-        if (uiMode == UiModes.DeckTurn)
-        {
-            if (cardScn.card.month == deck.deck.openCard.month)
-            {
-                gameManager.handleDeckToTablePlay(cardScn.card);
-            }
-        }
-        else
-        {
-            // var selected = activePlayer.getSelectedCard();
-            if (selected == null || cardScn.card.month != selected.card.month) { return; }
-            var arg = selected.card.clone();
-            activePlayer.unselectSelectedCard();
-            gameManager.playToTableCard(arg, cardScn.card);
-        }
-    } */
-
-    //public void removeTableCard(Card card)
-    // {
-    //tableCards.removeCard(card);
-    //}
-
-    /* public void handleEmptyCardPressed(int idx)
-    {
-        if (uiMode == UiModes.DeckTurn) { return; }
-        var selected = activePlayer.getSelectedCard();
-        if (selected == null) { return; }
-        gameManager.playCardToEmpty(selected.card);
-        tableCards.addCardAt(idx, selected.card);
-        //   tableCards.unHighlightCards();
-    } */
     public override void _Process(double delta)
     {
         label.Text = ownID.ToString();
     }
 
-    public void initTableCards(List<Card> cards)
+    public void setActivePlayer(int activeId)
     {
-        // tableCards.initCards(cards);
-    }
-
-    public void initPlayers(Player player1, Player player2)
-    {
-        this.players[0].setPlayer(player1);
-        this.players[1].setPlayer(player2);
-    }
-
-    public void setActivePlayer()
-    {
-        var activeIdx = gameManager.activePlayerIdx;
         foreach (var x in players)
         {
             x.setActive(false);
             x.unselectSelectedCard();
         }
-        activePlayer = players[activeIdx];
+        activePlayer = players[activeId];
         activePlayer.setActive(true);
     }
 
-    public void highlightValidHandCards()
-    {
-        /* var cardsTable = tableCards.cards;
-        // var cardsHand = activePlayer.handCards.cardScns;
-        var highlightList = new List<Card>();
-        foreach (var x in cardsHand)
-        {
-            foreach (var y in cardsTable)
-            {
-                if (y != null && x.card.month == y.month)
-                {
-                    highlightList.Add(x.card);
-                    continue;
-                }
-            }
-        } */
-        //activePlayer.unHighlightHandCards();
-        //activePlayer.highlightHandCards(highlightList);
-    }
-
-    /// <summary>
-    /// Basierend auf aktuell ausgewählter in Hand
-    /// </summary>
-    /* public void highlightTableCards()
-    {
-        CardScn selected = null;
-        if (uiMode == UiModes.PlayerTurn)
-        {
-            //    selected = activePlayer.getSelectedCard();
-        }
-        else if (uiMode == UiModes.DeckTurn)
-        {
-            //selected = deck.openCard;
-        }
-        //tableCards.unHighlightCards();
-        if (selected == null) { return; }
-        var cardsTable = tableCards.cards;
-        var highlightList = new List<Card>();
-        foreach (var x in cardsTable)
-        {
-            if (x == null) { continue; }
-            if (selected.card.month == x.month)
-            {
-                highlightList.Add(x);
-                continue;
-            }
-        }
-        tableCards.highlightCards(highlightList);
-    } */
-
-    /* public void highlightTableCards(List<Card> cards)
-    {
-        tableCards.highlightCards(cards);
-    } */
-
     public void moveDeckToPlayerHand(int playerId)
     {
-        players[playerId].addHandCard(deck.draw());
+
+        var card = deck.draw();
+        card.type = CardType.Hand;
+        card.isOpen = true;
+        GD.Print(ownID, ",", playerId);
+        card.setAllowInteraction(playerId == ownID && activePlayerId == ownID);
+        card.allowClickable = playerId == ownID && activePlayerId == ownID;
+        players[playerId].addHandCard(card);
     }
 
     public void moveDeckToTable()
     {
-        tableCards.addCard(deck.draw());
-    }
-    public void setDeck(Deck deck)
-    {
-        this.deck.init(deck);
-    }
-    /* public void update()
-    {
-        foreach (var x in players)
-        {
-            x.update();
-        }
-        tableCards.updateCards();
+        var card = deck.draw();
+        card.type = CardType.Table;
+        card.isOpen = true;
+        tableCards.addCard(card);
         highlightHandCards();
-        highlightTableCards();
-    } */
 
+    }
+    public void setDeck(List<Card> cards)
+    {
+        foreach (var x in cards)
+        {
+            var scn = cardScn.Instantiate<CardScn>();
+            scn.type = CardType.Deck;
+            deck.addCard(scn);
+            scn.setCard(x.clone());
+        }
+    }
     List<Card> getValidHandCards()
     {
         var retList = new List<Card>();
@@ -195,6 +103,10 @@ public partial class UiManager : Node2D
         return retList;
     }
 
+    public void unHighlightTableCards()
+    {
+        tableCards.highlightCards(new List<Card>());
+    }
     public void highlightTableCards(CardScn cardScn)
     {
         var highlightList = new List<Card>();
@@ -211,21 +123,19 @@ public partial class UiManager : Node2D
     }
     public void startRound(int playerId)
     {
-        //      deck.setOpenCardVisibility(false);
         foreach (var x in players)
         {
             x.setActive(false);
         }
-
         activePlayer = players[playerId];
         activePlayer.setActive(true);
-        var cards = getValidHandCards();
-        activePlayer.highlightHandCards(cards);
     }
 
-    public void init(Deck deck)
+    void highlightHandCards()
     {
-        this.deck.deck = deck;
+        if (ownID != activePlayerId) { return; }
+        var cards = getValidHandCards();
+        activePlayer.highlightHandCards(cards);
     }
 
     public void setUiMode(UiModes uiMode)
@@ -247,30 +157,65 @@ public partial class UiManager : Node2D
 
     public void addToEmptyTableCard(CardScn handCard, int idx)
     {
+        handCard.type = CardType.Table;
         activePlayer.removeHandCard(handCard);
         handCard.setSelected(false);
         handCard.setAllowInteraction(false);
         tableCards.addCard(handCard);
-        gameManager.playCardToEmpty(handCard.card.clone());
     }
 
-    public void matchTableCard(CardScn handCard, CardScn tableCard)
+    public CardScn findCard(List<CardScn> cardScns, Card toFind)
     {
-        handCard.setSelected(false);
-        activePlayer.addOpenCard(tableCard);
-        activePlayer.addOpenCard(handCard);
-        tableCards.removeCard(tableCard);
-        activePlayer.removeHandCard(handCard);
-        gameManager.playToTableCard(handCard.card.clone(), tableCard.card.clone());
+        CardScn retScn = null;
+        foreach (var x in cardScns)
+        {
+            if (x.card.isEqual(toFind))
+            {
+                retScn = x;
+                break;
+            }
+        }
+        return retScn;
+    }
+    public void matchTableCard(Card handCard, Card tableCard)
+    {
+        var handCardScn = findCard(activePlayer.handCards.cardScns, handCard);
+        var tableCardScn = findCard(tableCards.cardScns, tableCard);
+        handCardScn.type = CardType.Open;
+        tableCardScn.type = CardType.Open;
+        handCardScn.setSelected(false);
+        activePlayer.addOpenCard(tableCardScn);
+        activePlayer.addOpenCard(handCardScn);
+        tableCards.removeCard(tableCardScn);
+        activePlayer.removeHandCard(handCardScn);
     }
 
-    public void selectHandCard(CardScn cardScn, int playerId)
+    public void selectHandCard(CardScn cardScn)
     {
-        if (ownID != activePlayer.player.id) { return; }
         activePlayer.setSelectedCard(cardScn);
     }
-    /* public void addTableCardToFirst(Card card)
+
+    public CardScn rebuildCardScn(CardScn cardScn)
     {
-        tableCards.addCardFirst(card);
-    } */
+        var newScn = this.cardScn.Instantiate<CardScn>();
+        cardScn.GetParent().AddChild(newScn);
+        newScn.setCard(cardScn.card);
+        newScn.setAllowHover(cardScn.allowHover);
+        newScn.setAllowSelectable(cardScn.allowSelectable);
+        newScn.allowClickable = cardScn.allowClickable;
+        cardScn.QueueFree();
+        return newScn;
+    }
+    public void matchEmptyCard(Card card, int idx)
+    {
+        var cardScn = findCard(activePlayer.handCards.cardScns, card);
+        activePlayer.removeHandCard(cardScn);
+        cardScn.type = CardType.Table;
+        //cardScn = rebuildCardScn(cardScn);
+        cardScn.setAllowInteraction(false);
+        cardScn.allowClickable = true;
+        tableCards.overwriteEmptyCard(cardScn, idx);
+    }
+
+
 }

@@ -100,6 +100,12 @@ public partial class TableCardsN : Node2D
 		Utils.reparentTo(cardScn, this);
 		cardScn.setAllowInteraction(false);
 		cardScn.pressed += (x) => inputManager.flowerTableCardPressed(x);
+		buildEmptyCards();
+		renderCards();
+	}
+
+	void buildEmptyCards()
+	{
 		if (!hasEmptyCard())
 		{
 			var isEven = cardScns.Count % 2 == 0;
@@ -109,7 +115,6 @@ public partial class TableCardsN : Node2D
 			}
 			pushEmptyCard();
 		}
-		renderCards();
 	}
 
 	bool hasEmptyCard()
@@ -151,6 +156,16 @@ public partial class TableCardsN : Node2D
 				break;
 			}
 		}
+		renderCards();
+	}
+
+	public void overwriteEmptyCard(CardScn cardScn, int idx)
+	{
+		Utils.reparentTo(cardScn, this);
+		cardScn.pressed += (x) => inputManager.flowerTableCardPressed(x);
+		this.cardScns[idx].QueueFree();
+		this.cardScns[idx] = cardScn;
+		buildEmptyCards();
 		renderCards();
 	}
 }

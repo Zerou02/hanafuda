@@ -2,13 +2,16 @@ using System.Collections.Generic;
 using Godot;
 public partial class DeckScn : Node2D
 {
-	public Deck deck;
 	public CardScn upperCard;
+	public CardScn floor;
 	public List<CardScn> cards = new List<CardScn>();
 	PackedScene cardScn = GD.Load<PackedScene>("scenes/Card.tscn");
 	public override void _Ready()
 	{
 		upperCard = GetNode<CardScn>("UpperCard");
+		floor = GetNode<CardScn>("Floor");
+		floor.setCard(Card.GetEmpty());
+		floor.setAllowInteraction(false);
 		upperCard.setAllowHover(false);
 		upperCard.setAllowSelectable(false);
 		upperCard.Visible = false;
@@ -18,39 +21,23 @@ public partial class DeckScn : Node2D
 	{
 	}
 
-	public void init(Deck deck)
+	public void addCard(CardScn cardScn)
 	{
-		this.deck = deck;
-		deck.cards.ForEach(x =>
-		{
-			var y = cardScn.Instantiate<CardScn>();
-			this.cards.Add(y);
-			AddChild(y);
-			y.setCard(x);
-		});
+		AddChild(cardScn);
+		this.cards.Add(cardScn);
+		cardScn.setAllowInteraction(false);
+		cardScn.isOpen = false;
 	}
-
 	public void setUpperCard()
 	{
-		var openCard = deck.openCard;
-
-		if (openCard == null) { return; }
-		foreach (var x in this.cards)
-		{
-			if (x.card.equal(openCard))
-			{
-				upperCard = x;
-				break;
-			}
-		}
+		if (cards.Count == 0) { return; }
+		upperCard = cards[0];
 	}
 	public CardScn draw()
 	{
 		setUpperCard();
+		cards.RemoveAt(0);
 		return upperCard;
-		//this.openCard.Visible = val;
-		//if (openCard == null) { return; }
-		//this.openCard.setCard(openCard);
 	}
 	public void setOpenCardVisibility(bool val)
 	{

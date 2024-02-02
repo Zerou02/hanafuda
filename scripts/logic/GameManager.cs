@@ -7,37 +7,42 @@ public class GameManager
     public List<Player> players = new List<Player>();
     int currentPlayer = 0;
     public Deck deck = new Deck();
+    public Lobby server;
     public List<Card> tableCards = new List<Card>();
     public int activePlayerIdx = 0;
     public Player activePlayer;
 
-    public GameManager(int amountPlayer)
+    public GameManager(int amountPlayer, Lobby server)
     {
         for (int i = 0; i < amountPlayer; i++)
         {
             this.players.Add(new Player(this, i));
         }
-
+        this.server = server;
     }
+
+
+
 
     public void startGame()
     {
+        activePlayerIdx = 0;
+        activePlayer = players[activePlayerIdx];
+        server.command(MessageType.InitDeck, Serializer.serializeCards(deck.cards));
         foreach (var x in players)
         {
             for (int i = 0; i < 8; i++)
             {
                 x.addHandCard(deck.draw()!);
+                server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.Hand, x.id));
             }
         }
         for (int i = 0; i < 8; i++)
         {
             tableCards.Add(deck.draw()!);
+            server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.TableCard, 255));
         }
         startRound(0);
-        /*uiManager.initTableCards(tableCards);
-        this.activePlayer = players[activePlayerIdx];
-        uiManager.setActivePlayer();
-        uiManager.update(); */
     }
 
     public void startRound(int playerID)
@@ -49,7 +54,6 @@ public class GameManager
     {
         activePlayerIdx = (activePlayerIdx + 1) % players.Count;
         activePlayer = players[activePlayerIdx];
-        uiManager.setActivePlayer();
     }
     public void playCardToEmpty(Card selectedCard)
     {
@@ -91,29 +95,49 @@ public class GameManager
     {
         var deckCard = deck.draw();
         if (deckCard == null) { return; }
-        uiManager.setOpenCardVis(true);
         var matches = matchTableCards(deckCard!);
         if (matches.Count == 0)
         {
             tableCards.Add(deckCard);
-            //    uiManager.addTableCardToFirst(deckCard.clone());
-            uiManager.setOpenCardVis(false);
             switchPlayer();
         }
         else if (matches.Count == 1)
         {
             handleTableCardMatch(deckCard, matches[0]);
-            uiManager.setOpenCardVis(false);
             switchPlayer();
         }
         else
         {
             //  uiManager.highlightTableCards(matches);
-            uiManager.setUiMode(UiModes.DeckTurn);
+            // uiManager.setUiMode(UiModes.DeckTurn);
         }
         //     uiManager.update();
     }
 
+    public void startDeckTurn()
+    {
+        GD.Print("STARTDECKTURN");
+        GD.Print(tableCards.Count);
+        tableCards.ForEach(x => x.print());
+        GD.Print(activePlayer.openCards.Count);
+        GD.Print("hand");
+        activePlayer.handCards.ForEach(x => x.print());
+
+
+    }
+
+    public void moveDeckToPlayerHand()
+    {
+        var card = this.deck.draw();
+        if (card == null) { return; }
+        activePlayer.handCards.Add(card);
+    }
+    public void moveDeckToTable()
+    {
+        var card = this.deck.draw();
+        if (card == null) { return; }
+        tableCards.Add(card);
+    }
     public void handleDeckToTablePlay(Card playerCard)
     {
         activePlayer.addOpenCard(playerCard.clone());
@@ -121,8 +145,8 @@ public class GameManager
         tableCards = Utils.removeCard(tableCards, playerCard);
         // uiManager.removeTableCard(playerCard);
         deck.openCard = null;
-        uiManager.setOpenCardVis(false);
-        uiManager.setUiMode(UiModes.PlayerTurn);
+        //uiManager.setOpenCardVis(false);
+        //uiManager.setUiMode(UiModes.PlayerTurn);
         switchPlayer();
         //       uiManager.update();
     }

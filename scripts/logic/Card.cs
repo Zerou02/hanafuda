@@ -1,3 +1,6 @@
+using System;
+using Godot;
+
 public class Card
 {
     public Types type;
@@ -29,8 +32,33 @@ public class Card
         return new Card((int)this.month, (int)this.day);
     }
 
+    public bool isEqual(Card other)
+    {
+        return this.month == other.month && this.day == other.day;
+    }
     public bool equal(Card other)
     {
         return this.month == other.month && this.day == other.day;
+    }
+    public static byte[] serialize(Card card)
+    {
+        var retArr = new byte[3];
+        retArr[0] = (byte)card.month;
+        retArr[1] = (byte)card.day;
+        retArr[2] = Utils.boolToByte(card.valid);
+        return retArr;
+    }
+
+    public void print()
+    {
+        GD.Print(this.month + "," + this.day + "," + this.type + "," + this.valid);
+    }
+    public static Card deserialize(byte[] bytes)
+    {
+        if (bytes.Length != 3) { throw new Exception("Wrong Format"); }
+        var month = (int)bytes[0];
+        var day = (int)bytes[1];
+        var valid = Utils.byteToBool(bytes[2]);
+        return valid ? new Card(month, day) : Card.GetEmpty();
     }
 }

@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 
 public partial class TableCards : Node2D
@@ -132,17 +133,5 @@ public partial class TableCards : Node2D
 		highlightCards(new List<Card>());
 	}
 
-	public void addCardFirst(Card card)
-	{
-		var dest = 0;
-		foreach (var x in cards)
-		{
-			if (x == null)
-			{
-				break;
-			}
-			dest += 1;
-		}
-		this.addCardAt(dest, card);
-	}
+
 }

@@ -20,7 +20,7 @@ public partial class PlayerScn : Node2D
 	public void setPlayer(Player player)
 	{
 		this.player = player;
-		handCards.player = player;
+		//handCards.player = player;
 	}
 
 	public void highlightHandCards(List<Card> cards)
