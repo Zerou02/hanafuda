@@ -43,26 +43,11 @@ public class GameManager
         }
     }
 
-    public void startRound(int playerID)
-    {
-        activePlayer = players[playerID];
-    }
-
     public void switchPlayer()
     {
         activePlayerIdx = (activePlayerIdx + 1) % players.Count;
         activePlayer = players[activePlayerIdx];
     }
-
-    public void handleTableCardMatch(Card selectedCard, Card tableCard)
-    {
-        tableCards = Utils.removeCard(tableCards, tableCard);
-        activePlayer.addOpenCard(selectedCard.clone());
-        activePlayer.addOpenCard(tableCard.clone());
-        activePlayer.handCards = Utils.removeCard(activePlayer.handCards, selectedCard);
-        //uiManager.removeTableCard(tableCard);
-    }
-
 
     public List<Card> matchTableCards(Card card)
     {
@@ -118,30 +103,5 @@ public class GameManager
             // uiManager.setUiMode(UiModes.DeckTurn);
         }
         //     uiManager.update();
-    }
-
-    public void moveDeckToPlayerHand()
-    {
-        var card = this.deck.draw();
-        if (card == null) { return; }
-        activePlayer.handCards.Add(card);
-    }
-    public void moveDeckToTable()
-    {
-        var card = this.deck.draw();
-        if (card == null) { return; }
-        tableCards.Add(card);
-    }
-    public void handleDeckToTablePlay(Card playerCard)
-    {
-        activePlayer.addOpenCard(playerCard.clone());
-        activePlayer.addOpenCard(deck.openCard.clone());
-        tableCards = Utils.removeCard(tableCards, playerCard);
-        // uiManager.removeTableCard(playerCard);
-        deck.openCard = null;
-        //uiManager.setOpenCardVis(false);
-        //uiManager.setUiMode(UiModes.PlayerTurn);
-        switchPlayer();
-        //       uiManager.update();
     }
 }
