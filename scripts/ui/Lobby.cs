@@ -123,9 +123,8 @@ public partial class Lobby : Node2D
 
 	public void switchPlayer()
 	{
-		//var newActivePlayerID = gameManager.activePlayerIdx % gameManager.players.Count;
-		//gameManager.activePlayerIdx = newActivePlayerID;
-
+		var newActivePlayerID = (hanafuda.uiManager.activePlayerId + 1) % hanafuda.uiManager.players.Length;
+		hanafuda.uiManager.setActivePlayer(newActivePlayerID);
 	}
 	void initDeck(byte[] bytes)
 	{
@@ -173,7 +172,6 @@ public partial class Lobby : Node2D
 		}
 		var cards = Serializer.deserializeCards(cardBytes);
 		var idx = bytes[3];
-		GD.Print(cards[0].month, cards[0].day, idx);
 		hanafuda.uiManager.matchEmptyCard(cards[0], idx);
 	}
 	public void command(MessageType type, byte[] bytes)
@@ -196,13 +194,7 @@ public partial class Lobby : Node2D
 		}
 		else if (type == MessageType.StartDeckTurn)
 		{
-			GameManager.startDeckTurn();
-			/* if (gameManager != null)
-			{
-				synchronizeState();
-				gameManager.startDeckTurn();
-				Rpc("sendMessage", (int)type, bytes);
-			} */
+			GameManager.startDeckTurn(this, getDeckCard(), getTableCards());
 		}
 		else if (type == MessageType.MatchTableCardWithDeck)
 		{
@@ -220,7 +212,6 @@ public partial class Lobby : Node2D
 			initDeck(bytes);
 			Rpc("sendMessage", (int)type, bytes);
 			//TODO: Besser machen
-			GD.Print("ab");
 			GameManager.handoutCardsAtStartOfGame(this, new List<int>() { 0, 1 });
 		}
 		else if (type == MessageType.SetActivePlayer)
@@ -230,6 +221,15 @@ public partial class Lobby : Node2D
 		}
 	}
 
+	public Card getDeckCard()
+	{
+		return hanafuda.uiManager.deck.cards[0].card.clone();
+	}
+
+	public List<Card> getTableCards()
+	{
+		return Utils.cloneCards(hanafuda.uiManager.tableCards.cardScns);
+	}
 	/* public void synchronizeState()
 	{
 		gameManager.tableCards = Utils.cloneCards(hanafuda.uiManager.tableCards.cardScns);

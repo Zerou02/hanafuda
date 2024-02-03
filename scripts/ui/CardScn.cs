@@ -1,3 +1,4 @@
+using System;
 using Godot;
 
 public enum CardType { Deck, Hand, Open, Table, None };
@@ -12,9 +13,7 @@ public partial class CardScn : Node2D
 
 	public bool isSelected = false;
 	public bool isOpen = true;
-	public bool allowHover = true;
 	public bool allowSelectable = true;
-	public bool allowClickable = true;
 
 	[Signal]
 	public delegate void pressedEventHandler(CardScn card);
@@ -33,8 +32,8 @@ public partial class CardScn : Node2D
 		validTexture = GetNode<Sprite2D>("ValidTexture");
 		inputManager = GetNode<InputManager>(Constants.inputManagerPath);
 		setCard(new Card(2, 0));
-		area2D.MouseEntered += () => { if (allowHover) { setHover(true); } };
-		area2D.MouseExited += () => setHover(false);
+		area2D.MouseEntered += () => inputManager.mouseEnteredOnCard(this);
+		area2D.MouseExited += () => inputManager.mouseExitedOnCard(this);
 	}
 
 	public void setCard(Card card)
@@ -80,9 +79,9 @@ public partial class CardScn : Node2D
 			var pos = ToLocal(mouseEvent!.Position);
 			//var rect = this.sprite2D.GetRect();
 			//rect = new Rect2(rect.Position, rect.Size * sprite2D.Scale);
-			if (mouseEvent.IsPressed() && sprite2D.GetScaledRect().HasPoint(pos) && allowClickable)
+			if (mouseEvent.IsPressed() && sprite2D.GetScaledRect().HasPoint(pos))
 			{
-				GD.Print(card.type);
+				inputManager.cardPressed(this);
 				EmitSignal(SignalName.pressed, this);
 			}
 		}
@@ -97,13 +96,11 @@ public partial class CardScn : Node2D
 
 	public void setHover(bool val)
 	{
-		if (!allowHover) { return; }
 		hoverTexture.Visible = val;
 	}
 
 	public void setAllowInteraction(bool val)
 	{
-		setAllowHover(val);
 		setAllowSelectable(val);
 		if (!val)
 		{
@@ -111,10 +108,6 @@ public partial class CardScn : Node2D
 			setValid(false);
 			setSelected(false);
 		}
-	}
-	public void setAllowHover(bool val)
-	{
-		allowHover = val;
 	}
 
 	public void setAllowSelectable(bool val)

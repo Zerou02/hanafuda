@@ -49,7 +49,6 @@ public partial class CardRow : Node2D
 		foreach (var x in children)
 		{
 			var card = x as CardScn;
-			card.setAllowHover(val);
 			card.setAllowSelectable(val);
 			if (!val)
 			{
@@ -77,7 +76,6 @@ public partial class CardRow : Node2D
 			cardScns.Add(scn);
 			this.AddChild(scn);
 			scn.setCard(cards[i]);
-			scn.setAllowHover(allowCardInteraction);
 			scn.setAllowSelectable(allowCardInteraction);
 			if (selected != null && cards[i].equal(selected))
 			{

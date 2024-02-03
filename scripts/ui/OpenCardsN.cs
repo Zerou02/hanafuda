@@ -22,7 +22,6 @@ public partial class OpenCardsN : Node2D
 		this.cardScns.Add(cardScn);
 		Utils.reparentTo(cardScn, this);
 		cardScn.setAllowInteraction(false);
-		cardScn.allowClickable = false;
 		renderCards();
 	}
 }

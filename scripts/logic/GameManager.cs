@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Godot;
 
 public class GameManager
@@ -49,7 +50,7 @@ public class GameManager
         activePlayer = players[activePlayerIdx];
     }
 
-    public List<Card> matchTableCards(Card card)
+    public static List<Card> matchTableCards(Card card, List<Card> tableCards)
     {
         var retList = new List<Card>();
         foreach (var x in tableCards)
@@ -63,7 +64,7 @@ public class GameManager
         return retList;
     }
 
-    public int findFirstInvalidIdx(List<Card> cards)
+    public static int findFirstInvalidIdx(List<Card> cards)
     {
         var idx = 255;
         for (int i = 0; i < cards.Count; i++)
@@ -76,26 +77,20 @@ public class GameManager
         }
         return idx;
     }
-    public static void startDeckTurn()
+    public static void startDeckTurn(Lobby server, Card deckCard, List<Card> tableCards)
     {
-        var deckCard = deck.draw();
         if (deckCard == null) { return; }
-        var matches = matchTableCards(deckCard!);
+        var matches = matchTableCards(deckCard, tableCards);
         GD.Print("countmatches", matches.Count);
         if (matches.Count == 0)
         {
-            //tableCards.Add(deckCard);
-            //   switchPlayer();
             server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.TableCard, findFirstInvalidIdx(tableCards)));
             server.command(MessageType.SwitchPlayer, new byte[] { });
         }
         else if (matches.Count == 1)
         {
-            //handleTableCardMatch(deckCard, matches[0]);
             server.command(MessageType.MatchTableCardWithDeck, Serializer.serializeCards(new List<Card>() { deckCard, matches[0] }));
             server.command(MessageType.SwitchPlayer, new byte[] { });
-
-            // switchPlayer();
         }
         else
         {

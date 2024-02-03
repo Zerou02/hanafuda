@@ -11,8 +11,6 @@ public partial class InputManager : Node
 
 	public void handCardSelected(CardScn cardScn)
 	{
-		GD.Print("AA", uiManager.ownID, ",", uiManager.activePlayerId);
-		if (cardScn.type != CardType.Hand || uiManager.ownID != uiManager.activePlayerId) { return; }
 		selectedCard = cardScn;
 		uiManager.selectHandCard(cardScn);
 		uiManager.highlightTableCards(cardScn);
@@ -39,5 +37,34 @@ public partial class InputManager : Node
 		selectedCard = null;
 		uiManager.unHighlightTableCards();
 		uiManager.server.command(MessageType.StartDeckTurn, new byte[] { });
+	}
+
+	public void mouseEnteredOnCard(CardScn cardScn)
+	{
+		if (cardScn.type == CardType.Hand && uiManager.ownID == uiManager.activePlayerId)
+		{
+			cardScn.setHover(true);
+		}
+	}
+
+	public void mouseExitedOnCard(CardScn card)
+	{
+		card.setHover(false);
+	}
+
+	public void cardPressed(CardScn cardScn)
+	{
+		if (uiManager.ownID != uiManager.activePlayerId) { return; }
+		if (cardScn.type == CardType.Hand)
+		{
+			handCardSelected(cardScn);
+		}
+		else if (cardScn.type == CardType.Table)
+		{
+			if (cardScn.card.isValid())
+			{
+				flowerTableCardPressed(cardScn);
+			}
+		}
 	}
 }

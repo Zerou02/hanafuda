@@ -12,8 +12,6 @@ public partial class DeckScn : Node2D
 		floor = GetNode<CardScn>("Floor");
 		floor.setCard(Card.GetEmpty());
 		floor.setAllowInteraction(false);
-		upperCard.setAllowHover(false);
-		upperCard.setAllowSelectable(false);
 		upperCard.Visible = false;
 	}
 

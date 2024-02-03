@@ -78,7 +78,6 @@ public partial class TableCards : Node2D
 				var x = cardScn.Instantiate<CardScn>();
 				this.AddChild(x);
 				x.setCard(entry);
-				x.setAllowHover(false);
 				x.setAllowSelectable(false);
 				foreach (var c in highlightedCards)
 				{

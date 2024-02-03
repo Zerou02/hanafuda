@@ -5,7 +5,7 @@ using System.Threading;
 public enum UiModes { PlayerTurn, DeckTurn };
 public partial class UiManager : Node2D
 {
-    DeckScn deck;
+    public DeckScn deck;
     public TableCardsN tableCards;
     public PlayerScn[] players = new PlayerScn[2];
     public PlayerScn activePlayer;
@@ -61,13 +61,10 @@ public partial class UiManager : Node2D
 
     public void moveDeckToPlayerHand(int playerId)
     {
-
         var card = deck.draw();
         card.type = CardType.Hand;
         card.isOpen = true;
-        GD.Print(ownID, ",", playerId);
         card.setAllowInteraction(playerId == ownID && activePlayerId == ownID);
-        card.allowClickable = playerId == ownID && activePlayerId == ownID;
         players[playerId].addHandCard(card);
     }
 
@@ -133,6 +130,10 @@ public partial class UiManager : Node2D
         }
         activePlayer = players[playerId];
         activePlayer.setActive(true);
+        activePlayer.handCards.cardScns.ForEach(x =>
+        {
+            x.setAllowInteraction(true);
+        });
     }
 
     void highlightHandCards()
@@ -184,7 +185,6 @@ public partial class UiManager : Node2D
 
     public void matchTableCardDeck(Card tableCard)
     {
-        GD.Print("TAbleCArd::", tableCard.month, ",", tableCard.day);
         var deckScn = deck.draw();
         deckScn.isOpen = true;
         var tableCardScn = findCard(tableCards.cardScns, tableCard);
@@ -214,25 +214,13 @@ public partial class UiManager : Node2D
         activePlayer.setSelectedCard(cardScn);
     }
 
-    public CardScn rebuildCardScn(CardScn cardScn)
-    {
-        var newScn = this.cardScn.Instantiate<CardScn>();
-        cardScn.GetParent().AddChild(newScn);
-        newScn.setCard(cardScn.card);
-        newScn.setAllowHover(cardScn.allowHover);
-        newScn.setAllowSelectable(cardScn.allowSelectable);
-        newScn.allowClickable = cardScn.allowClickable;
-        cardScn.QueueFree();
-        return newScn;
-    }
+
     public void matchEmptyCard(Card card, int idx)
     {
         var cardScn = findCard(activePlayer.handCards.cardScns, card);
         activePlayer.removeHandCard(cardScn);
         cardScn.type = CardType.Table;
-        //cardScn = rebuildCardScn(cardScn);
         cardScn.setAllowInteraction(false);
-        cardScn.allowClickable = true;
         tableCards.overwriteEmptyCard(cardScn, idx);
     }
 
