@@ -6,7 +6,7 @@ public enum UiModes { PlayerTurn, DeckTurn };
 public partial class UiManager : Node2D
 {
     DeckScn deck;
-    TableCardsN tableCards;
+    public TableCardsN tableCards;
     public PlayerScn[] players = new PlayerScn[2];
     public PlayerScn activePlayer;
     public int ownID = -1;
@@ -17,11 +17,13 @@ public partial class UiManager : Node2D
     PackedScene cardScn = GD.Load<PackedScene>("scenes/Card.tscn");
     InputManager inputManager;
     public Lobby server;
+    public Label activeTurnDisplay;
     public override void _Ready()
     {
         label = GetNode<Label>("Label");
         deck = GetNode<DeckScn>("DeckScn");
         tableCards = GetNode<TableCardsN>("TableCardsN");
+        activeTurnDisplay = GetNode<Label>("ActiveTurnDisplay");
         players[0] = GetNode<PlayerScn>("Player");
         players[1] = GetNode<PlayerScn>("Player2");
         inputManager = GetNode<InputManager>(Constants.inputManagerPath);
@@ -42,6 +44,7 @@ public partial class UiManager : Node2D
     public override void _Process(double delta)
     {
         label.Text = ownID.ToString();
+        activeTurnDisplay.Text = ownID == activePlayerId ? "Your Turn" : "Enemy Turn";
     }
 
     public void setActivePlayer(int activeId)
@@ -51,6 +54,7 @@ public partial class UiManager : Node2D
             x.setActive(false);
             x.unselectSelectedCard();
         }
+        activePlayerId = activeId;
         activePlayer = players[activeId];
         activePlayer.setActive(true);
     }
@@ -177,6 +181,21 @@ public partial class UiManager : Node2D
         }
         return retScn;
     }
+
+    public void matchTableCardDeck(Card tableCard)
+    {
+        GD.Print("TAbleCArd::", tableCard.month, ",", tableCard.day);
+        var deckScn = deck.draw();
+        deckScn.isOpen = true;
+        var tableCardScn = findCard(tableCards.cardScns, tableCard);
+        deckScn.type = CardType.Open;
+        tableCardScn.type = CardType.Open;
+        deckScn.setSelected(false);
+        activePlayer.addOpenCard(tableCardScn);
+        activePlayer.addOpenCard(deckScn);
+        tableCards.removeCard(tableCardScn);
+    }
+
     public void matchTableCard(Card handCard, Card tableCard)
     {
         var handCardScn = findCard(activePlayer.handCards.cardScns, handCard);
@@ -216,6 +235,5 @@ public partial class UiManager : Node2D
         cardScn.allowClickable = true;
         tableCards.overwriteEmptyCard(cardScn, idx);
     }
-
 
 }

@@ -24,25 +24,23 @@ public class GameManager
 
 
 
-    public void startGame()
+    public static void handoutCardsAtStartOfGame(Lobby server, List<int> playerIDs)
     {
-        activePlayerIdx = 0;
-        activePlayer = players[activePlayerIdx];
-        server.command(MessageType.InitDeck, Serializer.serializeCards(deck.cards));
-        foreach (var x in players)
+        GD.Print("aa");
+        foreach (var x in playerIDs)
         {
             for (int i = 0; i < 8; i++)
             {
-                x.addHandCard(deck.draw()!);
-                server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.Hand, x.id));
+                GD.Print(i);
+                //       x.addHandCard(deck.draw()!);
+                server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.Hand, x));
             }
         }
         for (int i = 0; i < 8; i++)
         {
-            tableCards.Add(deck.draw()!);
+            // tableCards.Add(deck.draw()!);
             server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.TableCard, 255));
         }
-        startRound(0);
     }
 
     public void startRound(int playerID)
@@ -55,13 +53,6 @@ public class GameManager
         activePlayerIdx = (activePlayerIdx + 1) % players.Count;
         activePlayer = players[activePlayerIdx];
     }
-    public void playCardToEmpty(Card selectedCard)
-    {
-        activePlayer.handCards.Remove(selectedCard);
-        tableCards.Add(selectedCard);
-        //  uiManager.update();
-        handleDeckMove();
-    }
 
     public void handleTableCardMatch(Card selectedCard, Card tableCard)
     {
@@ -71,19 +62,14 @@ public class GameManager
         activePlayer.handCards = Utils.removeCard(activePlayer.handCards, selectedCard);
         //uiManager.removeTableCard(tableCard);
     }
-    public void playToTableCard(Card selectedCard, Card tableCard)
-    {
-        if (selectedCard.month != tableCard.month) { return; }
-        handleTableCardMatch(selectedCard, tableCard);
-        handleDeckMove();
-    }
+
 
     public List<Card> matchTableCards(Card card)
     {
         var retList = new List<Card>();
         foreach (var x in tableCards)
         {
-            if (card.month == x.month)
+            if (x.isValid() && card.month == x.month)
             {
                 retList.Add(x);
                 continue;
@@ -91,20 +77,40 @@ public class GameManager
         }
         return retList;
     }
-    public void handleDeckMove()
+
+    public int findFirstInvalidIdx(List<Card> cards)
+    {
+        var idx = 255;
+        for (int i = 0; i < cards.Count; i++)
+        {
+            if (!cards[i].isValid())
+            {
+                idx = i;
+                break;
+            }
+        }
+        return idx;
+    }
+    public static void startDeckTurn()
     {
         var deckCard = deck.draw();
         if (deckCard == null) { return; }
         var matches = matchTableCards(deckCard!);
+        GD.Print("countmatches", matches.Count);
         if (matches.Count == 0)
         {
-            tableCards.Add(deckCard);
-            switchPlayer();
+            //tableCards.Add(deckCard);
+            //   switchPlayer();
+            server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.TableCard, findFirstInvalidIdx(tableCards)));
+            server.command(MessageType.SwitchPlayer, new byte[] { });
         }
         else if (matches.Count == 1)
         {
-            handleTableCardMatch(deckCard, matches[0]);
-            switchPlayer();
+            //handleTableCardMatch(deckCard, matches[0]);
+            server.command(MessageType.MatchTableCardWithDeck, Serializer.serializeCards(new List<Card>() { deckCard, matches[0] }));
+            server.command(MessageType.SwitchPlayer, new byte[] { });
+
+            // switchPlayer();
         }
         else
         {
@@ -112,18 +118,6 @@ public class GameManager
             // uiManager.setUiMode(UiModes.DeckTurn);
         }
         //     uiManager.update();
-    }
-
-    public void startDeckTurn()
-    {
-        GD.Print("STARTDECKTURN");
-        GD.Print(tableCards.Count);
-        tableCards.ForEach(x => x.print());
-        GD.Print(activePlayer.openCards.Count);
-        GD.Print("hand");
-        activePlayer.handCards.ForEach(x => x.print());
-
-
     }
 
     public void moveDeckToPlayerHand()

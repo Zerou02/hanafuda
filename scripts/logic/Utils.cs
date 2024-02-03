@@ -17,6 +17,26 @@ public class Utils
         return newList;
     }
 
+    public static List<Card> cloneCards(List<CardScn> cardScns)
+    {
+        var cards = extractCards(cardScns);
+        return copyCardList(cards);
+    }
+    public static List<Card> extractCards(List<CardScn> cardScns)
+    {
+        var retList = new List<Card>();
+        cardScns.ForEach(x => retList.Add(x.card));
+        return retList;
+    }
+    public static List<Card> copyCardList(List<Card> cards)
+    {
+        var retList = new List<Card>();
+        cards.ForEach(x =>
+        {
+            retList.Add(x.clone());
+        });
+        return retList;
+    }
     public static List<CardScn> removeCardScn(List<CardScn> cardScns, CardScn cardScn)
     {
         var newList = new List<CardScn>();

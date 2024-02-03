@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Godot;
 
 public partial class Lobby : Node2D
@@ -6,7 +7,6 @@ public partial class Lobby : Node2D
 	Button connnect;
 
 	PackedScene hanafudaScn = GD.Load<PackedScene>("scenes/Hanafuda.tscn");
-	GameManager? gameManager;
 	Hanafuda hanafuda;
 	ENetMultiplayerPeer peer;
 	bool isHost;
@@ -25,14 +25,14 @@ public partial class Lobby : Node2D
 		peer.CreateClient("127.0.0.1", 8080);
 		GetTree().GetMultiplayer().MultiplayerPeer = peer;
 		isHost = false;
-		instantiateHanafuda();
-
-		peer.PeerConnected += (x) => { hanafuda.uiManager.setActivePlayer(0); Rpc("sendMessage", (int)MessageType.InitGame, new byte[] { }); };
-		hanafuda.uiManager.ownID = 1;
-		hanafuda.uiManager.server = this;
+		instantiateHanafuda(1);
+		peer.PeerConnected += (x) => command(MessageType.SetActivePlayer, new byte[] { 0 });
+		var deck = new Deck();
+		peer.PeerConnected += (x) => command(MessageType.InitDeck, Serializer.serializeCards(deck.cards));
+		//peer.PeerConnected += (x) => { hanafuda.uiManager.setActivePlayer(0); Rpc("sendMessage", (int)MessageType.InitGame, new byte[] { }); };
 	}
 
-	public void instantiateHanafuda()
+	public void instantiateHanafuda(int playerId)
 	{
 		var hanafu = hanafudaScn.Instantiate<Hanafuda>();
 		host.QueueFree();
@@ -41,19 +41,19 @@ public partial class Lobby : Node2D
 		connnect = null;
 		this.AddChild(hanafu);
 		this.hanafuda = hanafu;
+		hanafuda.uiManager.ownID = playerId;
+		hanafuda.uiManager.server = this;
 	}
 	void createHost()
 	{
 		peer = new ENetMultiplayerPeer();
 		peer.CreateServer(8080, 2);
 		GetTree().GetMultiplayer().MultiplayerPeer = peer;
-		//	peer.PeerConnected += (x) => sendSignal();
-		gameManager = new GameManager(2, this);
 		isHost = true;
-		instantiateHanafuda();
-		hanafuda.uiManager.ownID = 0;
+		instantiateHanafuda(0);
 		hanafuda.uiManager.server = this;
 	}
+
 	public override void _Process(double delta)
 	{
 	}
@@ -61,7 +61,7 @@ public partial class Lobby : Node2D
 	[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false, TransferChannel = 0, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
 	public void sendMessage(MessageType type, byte[] bytes)
 	{
-		if (isHost)
+		/* if (isHost)
 		{
 			GD.Print("Host received", (MessageType)type);
 			if (type == MessageType.InitGame)
@@ -82,7 +82,7 @@ public partial class Lobby : Node2D
 			{
 				moveCard(bytes);
 			}
-		}
+		} */
 		GD.Print("whoever received");
 		if (type == MessageType.MatchTableCard)
 		{
@@ -94,13 +94,39 @@ public partial class Lobby : Node2D
 		}
 		else if (type == MessageType.StartDeckTurn)
 		{
-			if (gameManager != null)
+			/* if (gameManager != null)
 			{
 				gameManager.startDeckTurn();
-			}
+			} */
+		}
+		else if (type == MessageType.MatchTableCardWithDeck)
+		{
+			matchTableCardDeck(bytes);
+		}
+		else if (type == MessageType.SwitchPlayer)
+		{
+			switchPlayer();
+		}
+		else if (type == MessageType.InitDeck)
+		{
+			initDeck(bytes);
+		}
+		else if (type == MessageType.SetActivePlayer)
+		{
+			hanafuda.uiManager.setActivePlayer(bytes[0]);
+		}
+		else if (type == MessageType.MoveCard)
+		{
+			moveCard(bytes);
 		}
 	}
 
+	public void switchPlayer()
+	{
+		//var newActivePlayerID = gameManager.activePlayerIdx % gameManager.players.Count;
+		//gameManager.activePlayerIdx = newActivePlayerID;
+
+	}
 	void initDeck(byte[] bytes)
 	{
 		hanafuda.uiManager.setDeck(Serializer.deserializeCards(bytes));
@@ -114,7 +140,6 @@ public partial class Lobby : Node2D
 			if ((CardPosition)pos.dest == CardPosition.Hand)
 			{
 				hanafuda.uiManager.moveDeckToPlayerHand(pos.destIdx);
-				gameManager?.moveDeckToPlayerHand();
 			}
 			else if ((CardPosition)pos.dest == CardPosition.TableCard)
 			{
@@ -122,23 +147,20 @@ public partial class Lobby : Node2D
 				if (pos.destIdx == 255)
 				{
 					hanafuda.uiManager.moveDeckToTable();
-					gameManager?.moveDeckToTable();
 				}
 			}
 		}
 	}
 
+	public void matchTableCardDeck(byte[] bytes)
+	{
+		var cards = Serializer.deserializeCards(bytes);
+		hanafuda.uiManager.matchTableCardDeck(cards[1]);
+	}
+
 	public void matchTableCard(byte[] bytes)
 	{
-		GD.Print("MATCHTABLECARD");
 		var cards = Serializer.deserializeCards(bytes);
-		if (gameManager != null)
-		{
-			gameManager.tableCards = Utils.removeCard(gameManager.tableCards, cards[0]);
-			gameManager.tableCards = Utils.removeCard(gameManager.tableCards, cards[1]);
-			gameManager.activePlayer.openCards.Add(cards[0].clone());
-			gameManager.activePlayer.openCards.Add(cards[1].clone());
-		}
 		hanafuda.uiManager.matchTableCard(cards[0], cards[1]);
 	}
 
@@ -152,21 +174,12 @@ public partial class Lobby : Node2D
 		var cards = Serializer.deserializeCards(cardBytes);
 		var idx = bytes[3];
 		GD.Print(cards[0].month, cards[0].day, idx);
-		if (gameManager != null)
-		{
-			gameManager.tableCards.Add(cards[0].clone());
-		}
 		hanafuda.uiManager.matchEmptyCard(cards[0], idx);
 	}
 	public void command(MessageType type, byte[] bytes)
 	{
 		GD.Print("commd", type);
-		if (type == MessageType.InitDeck)
-		{
-			initDeck(bytes);
-			Rpc("sendMessage", (int)type, bytes);
-		}
-		else if (type == MessageType.MoveCard)
+		if (type == MessageType.MoveCard)
 		{
 			moveCard(bytes);
 			Rpc("sendMessage", (int)type, bytes);
@@ -183,11 +196,44 @@ public partial class Lobby : Node2D
 		}
 		else if (type == MessageType.StartDeckTurn)
 		{
-			if (gameManager != null)
+			GameManager.startDeckTurn();
+			/* if (gameManager != null)
 			{
+				synchronizeState();
 				gameManager.startDeckTurn();
 				Rpc("sendMessage", (int)type, bytes);
-			}
+			} */
+		}
+		else if (type == MessageType.MatchTableCardWithDeck)
+		{
+			matchTableCardDeck(bytes);
+			Rpc("sendMessage", (int)type, bytes);
+		}
+		else if (type == MessageType.SwitchPlayer)
+		{
+			switchPlayer();
+			Rpc("sendMessage", (int)type, bytes);
+		}
+		//Erhält nur Host
+		else if (type == MessageType.InitDeck)
+		{
+			initDeck(bytes);
+			Rpc("sendMessage", (int)type, bytes);
+			//TODO: Besser machen
+			GD.Print("ab");
+			GameManager.handoutCardsAtStartOfGame(this, new List<int>() { 0, 1 });
+		}
+		else if (type == MessageType.SetActivePlayer)
+		{
+			hanafuda.uiManager.setActivePlayer(bytes[0]);
+			Rpc("sendMessage", (int)type, bytes);
 		}
 	}
+
+	/* public void synchronizeState()
+	{
+		gameManager.tableCards = Utils.cloneCards(hanafuda.uiManager.tableCards.cardScns);
+		gameManager.activePlayer.openCards = Utils.cloneCards(hanafuda.uiManager.activePlayer.openCards.cardScns);
+		gameManager.activePlayer.handCards = Utils.cloneCards(hanafuda.uiManager.activePlayer.handCards.cardScns);
+	} */
 }
