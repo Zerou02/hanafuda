@@ -2,7 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 
-public partial class OpenCardsN : Node2D
+public partial class OpenCards : Node2D
 {
 	public List<CardScn> cardScns = new List<CardScn>();
 	public override void _Ready()

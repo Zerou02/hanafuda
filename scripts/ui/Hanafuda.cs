@@ -10,4 +10,6 @@ public partial class Hanafuda : Node2D
 	public override void _Process(double delta)
 	{
 	}
+
+
 }

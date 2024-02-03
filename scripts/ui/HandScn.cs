@@ -41,7 +41,6 @@ public partial class HandScn : Node2D
         Utils.reparentTo(cardScn, this);
         this.cardScns.Add(cardScn);
         cardScn.setCard(cardScn.card);
-        cardScn.pressed += (x) => inputManager.handCardSelected(x);
         Flexbox.alignLeft(bounds, this.cardScns);
     }
 

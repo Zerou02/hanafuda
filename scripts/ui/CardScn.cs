@@ -31,7 +31,7 @@ public partial class CardScn : Node2D
 		hoverTexture = GetNode<Sprite2D>("HoverTexture");
 		validTexture = GetNode<Sprite2D>("ValidTexture");
 		inputManager = GetNode<InputManager>(Constants.inputManagerPath);
-		setCard(new Card(2, 0));
+		setCard(new Card(0, 0));
 		area2D.MouseEntered += () => inputManager.mouseEnteredOnCard(this);
 		area2D.MouseExited += () => inputManager.mouseExitedOnCard(this);
 	}
@@ -44,6 +44,7 @@ public partial class CardScn : Node2D
 
 	void setImage()
 	{
+		this.Visible = true;
 		if (!this.isOpen || !card.isValid())
 		{
 			this.sprite2D.Texture = closedTex;
@@ -77,8 +78,6 @@ public partial class CardScn : Node2D
 		{
 			var mouseEvent = @event as InputEventMouseButton;
 			var pos = ToLocal(mouseEvent!.Position);
-			//var rect = this.sprite2D.GetRect();
-			//rect = new Rect2(rect.Position, rect.Size * sprite2D.Scale);
 			if (mouseEvent.IsPressed() && sprite2D.GetScaledRect().HasPoint(pos))
 			{
 				inputManager.cardPressed(this);

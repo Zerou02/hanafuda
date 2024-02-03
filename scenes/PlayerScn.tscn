@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/ui/PlayerScn.cs" id="1_ishvp"]
 [ext_resource type="PackedScene" uid="uid://boqxbs4ru8tc" path="res://scenes/HandScn.tscn" id="3_1n4pb"]
-[ext_resource type="PackedScene" uid="uid://b43uej1y6p63i" path="res://scenes/OpenCardsN.tscn" id="3_cnw4x"]
+[ext_resource type="PackedScene" uid="uid://b43uej1y6p63i" path="res://scenes/OpenCards.tscn" id="3_cnw4x"]
 
 [node name="PlayerScn" type="Node2D"]
 script = ExtResource("1_ishvp")

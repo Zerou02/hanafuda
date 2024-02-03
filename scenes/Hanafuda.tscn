@@ -4,8 +4,8 @@
 [ext_resource type="PackedScene" uid="uid://wp0yy6sjr8id" path="res://scenes/UiManager.tscn" id="2_j4nvj"]
 [ext_resource type="PackedScene" uid="uid://bpnpkalgs0wrr" path="res://scenes/PlayerScn.tscn" id="2_xrwn3"]
 [ext_resource type="Script" path="res://minosGD/scripts/MouseRayCaster.cs" id="3_3y3bd"]
-[ext_resource type="PackedScene" uid="uid://dw0myfnyfm4si" path="res://scenes/DeckScn.tscn" id="3_pbd45"]
-[ext_resource type="PackedScene" uid="uid://cutfnu51c5ntw" path="res://scenes/TableCardsN.tscn" id="5_en43w"]
+[ext_resource type="PackedScene" uid="uid://brceuig5gsaon" path="res://scenes/DeckScn.tscn" id="3_pbd45"]
+[ext_resource type="PackedScene" uid="uid://cutfnu51c5ntw" path="res://scenes/TableCards.tscn" id="5_en43w"]
 
 [node name="Hanafuda" type="Node2D"]
 script = ExtResource("1_jel01")
@@ -41,7 +41,7 @@ position = Vector2(3, 122)
 [node name="DeckScn" parent="UiManager" instance=ExtResource("3_pbd45")]
 position = Vector2(40, 246)
 
-[node name="TableCardsN" parent="UiManager" instance=ExtResource("5_en43w")]
+[node name="TableCards" parent="UiManager" instance=ExtResource("5_en43w")]
 position = Vector2(136, 255)
 
 [node name="MouseRayCaster" type="RayCast2D" parent="."]

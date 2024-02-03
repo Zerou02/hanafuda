@@ -27,19 +27,16 @@ public class GameManager
 
     public static void handoutCardsAtStartOfGame(Lobby server, List<int> playerIDs)
     {
-        GD.Print("aa");
         foreach (var x in playerIDs)
         {
             for (int i = 0; i < 8; i++)
             {
                 GD.Print(i);
-                //       x.addHandCard(deck.draw()!);
                 server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.Hand, x));
             }
         }
         for (int i = 0; i < 8; i++)
         {
-            // tableCards.Add(deck.draw()!);
             server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.TableCard, 255));
         }
     }
@@ -94,9 +91,8 @@ public class GameManager
         }
         else
         {
-            //  uiManager.highlightTableCards(matches);
-            // uiManager.setUiMode(UiModes.DeckTurn);
+            server.command(MessageType.OpenDeckCard, new byte[] { });
+            server.command(MessageType.DeckChoose, new byte[] { });
         }
-        //     uiManager.update();
     }
 }

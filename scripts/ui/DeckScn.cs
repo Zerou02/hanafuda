@@ -2,17 +2,14 @@ using System.Collections.Generic;
 using Godot;
 public partial class DeckScn : Node2D
 {
-	public CardScn upperCard;
 	public CardScn floor;
 	public List<CardScn> cards = new List<CardScn>();
 	PackedScene cardScn = GD.Load<PackedScene>("scenes/Card.tscn");
 	public override void _Ready()
 	{
-		upperCard = GetNode<CardScn>("UpperCard");
 		floor = GetNode<CardScn>("Floor");
 		floor.setCard(Card.GetEmpty());
 		floor.setAllowInteraction(false);
-		upperCard.Visible = false;
 	}
 
 	public override void _Process(double delta)
@@ -25,20 +22,20 @@ public partial class DeckScn : Node2D
 		this.cards.Add(cardScn);
 		cardScn.setAllowInteraction(false);
 		cardScn.isOpen = false;
-	}
-	public void setUpperCard()
-	{
-		if (cards.Count == 0) { return; }
-		upperCard = cards[0];
+		GD.Print(cards.Count);
 	}
 	public CardScn draw()
 	{
-		setUpperCard();
+		CardScn scn = cards[0];
 		cards.RemoveAt(0);
-		return upperCard;
+		return scn;
 	}
 	public void setOpenCardVisibility(bool val)
 	{
-		upperCard.isOpen = val;
+		if (cards.Count > 0)
+		{
+			cards[0].isOpen = val;
+			cards[0].MoveToFront();
+		}
 	}
 }

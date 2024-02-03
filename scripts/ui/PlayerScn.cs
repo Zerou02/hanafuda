@@ -4,7 +4,7 @@ public partial class PlayerScn : Node2D
 {
 	public Player player;
 	public HandScn handCards;
-	public OpenCardsN openCards;
+	public OpenCards openCards;
 	bool isActive = false;
 
 	[Signal]
@@ -12,15 +12,12 @@ public partial class PlayerScn : Node2D
 	public override void _Ready()
 	{
 		handCards = GetNode<HandScn>("HandScn");
-		openCards = GetNode<OpenCardsN>("OpenCards");
-
-		//handCards.cardSelected += (x) => EmitSignal(SignalName.cardSelected, x);
+		openCards = GetNode<OpenCards>("OpenCards");
 	}
 
 	public void setPlayer(Player player)
 	{
 		this.player = player;
-		//handCards.player = player;
 	}
 
 	public void highlightHandCards(List<Card> cards)
@@ -39,18 +36,6 @@ public partial class PlayerScn : Node2D
 			x.setAllowInteraction(val);
 		}
 	}
-
-	public void update()
-	{
-		//		handCards.setCards(player.handCards);
-		//		openCards.setCards(player.openCards);
-	}
-
-	/* public CardScn? getSelectedCard()
-	{
-		//return handCards.selectedCard;
-	} */
-
 	public void addHandCard(CardScn cardScn)
 	{
 		handCards.addCardScn(cardScn);
@@ -71,6 +56,5 @@ public partial class PlayerScn : Node2D
 	}
 	public void unselectSelectedCard()
 	{
-		//	handCards.selectedCard = null;
 	}
 }

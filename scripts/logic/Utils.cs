@@ -41,12 +41,12 @@ public class Utils
     {
         var newList = new List<CardScn>();
         cardScns.ForEach(x =>
-        {
-            if (!x.card.isEqual(cardScn.card))
             {
-                newList.Add(x);
-            }
-        });
+                if (!x.card.isEqual(cardScn.card))
+                {
+                    newList.Add(x);
+                }
+            });
         return newList;
     }
     public static void reparentTo(Node node, Node newParent)

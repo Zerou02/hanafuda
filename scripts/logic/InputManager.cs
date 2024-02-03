@@ -11,6 +11,7 @@ public partial class InputManager : Node
 
 	public void handCardSelected(CardScn cardScn)
 	{
+		if (uiManager.uiMode != UiModes.PlayerTurn) { return; }
 		selectedCard = cardScn;
 		uiManager.selectHandCard(cardScn);
 		uiManager.highlightTableCards(cardScn);
@@ -18,6 +19,7 @@ public partial class InputManager : Node
 
 	public void emptyTableCardPressed(int idx)
 	{
+		GD.Print("selectedCard", selectedCard);
 		if (selectedCard == null) { return; }
 		var cardBytes = Card.serialize(selectedCard.card);
 		var bytes = new byte[4];
@@ -26,22 +28,49 @@ public partial class InputManager : Node
 		uiManager.server.command(MessageType.MatchEmptyTableCard, bytes);
 		selectedCard = null;
 		uiManager.unHighlightTableCards();
+		uiManager.activePlayer.unHighlightHandCards();
 		uiManager.server.command(MessageType.StartDeckTurn, new byte[] { });
 	}
 
 	public void flowerTableCardPressed(CardScn cardScn)
 	{
-		if (selectedCard == null) { return; }
-		if (cardScn.type != CardType.Table || cardScn.card.month != selectedCard.card.month) { return; }
-		uiManager.server.command(MessageType.MatchTableCard, Serializer.serializeCards(new List<Card>() { selectedCard.card, cardScn.card }));
+		if (uiManager.uiMode == UiModes.DeckTurn)
+		{
+
+		}
+		else
+		{
+
+		}
+		if (selectedCard == null && uiManager.uiMode == UiModes.PlayerTurn) { return; }
+		if (uiManager.uiMode != UiModes.DeckTurn)
+		{
+			if (cardScn.type != CardType.Table || cardScn.card.month != selectedCard.card.month) { return; }
+		}
+		uiManager.activePlayer.unHighlightHandCards();
+		if (uiManager.uiMode == UiModes.DeckTurn)
+		{
+			uiManager.server.command(MessageType.MatchTableCardWithDeck, Serializer.serializeCards(new List<Card>() { uiManager.deck.cards[0].card.clone(), cardScn.card }));
+		}
+		else
+		{
+			uiManager.server.command(MessageType.MatchTableCard, Serializer.serializeCards(new List<Card>() { selectedCard.card, cardScn.card }));
+		}
 		selectedCard = null;
 		uiManager.unHighlightTableCards();
-		uiManager.server.command(MessageType.StartDeckTurn, new byte[] { });
+		if (uiManager.uiMode == UiModes.DeckTurn)
+		{
+			uiManager.server.command(MessageType.SwitchPlayer, new byte[] { });
+		}
+		else
+		{
+			uiManager.server.command(MessageType.StartDeckTurn, new byte[] { });
+		}
 	}
 
 	public void mouseEnteredOnCard(CardScn cardScn)
 	{
-		if (cardScn.type == CardType.Hand && uiManager.ownID == uiManager.activePlayerId)
+		if (cardScn.type == CardType.Hand && uiManager.ownID == uiManager.activePlayerId && uiManager.belongsToActivePlayer(cardScn))
 		{
 			cardScn.setHover(true);
 		}
@@ -55,7 +84,7 @@ public partial class InputManager : Node
 	public void cardPressed(CardScn cardScn)
 	{
 		if (uiManager.ownID != uiManager.activePlayerId) { return; }
-		if (cardScn.type == CardType.Hand)
+		if (cardScn.type == CardType.Hand && uiManager.belongsToActivePlayer(cardScn))
 		{
 			handCardSelected(cardScn);
 		}

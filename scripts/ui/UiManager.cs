@@ -1,12 +1,13 @@
 using Godot;
 using System.Collections.Generic;
+using System.Net.Http.Headers;
 using System.Threading;
 
 public enum UiModes { PlayerTurn, DeckTurn };
 public partial class UiManager : Node2D
 {
     public DeckScn deck;
-    public TableCardsN tableCards;
+    public TableCards tableCards;
     public PlayerScn[] players = new PlayerScn[2];
     public PlayerScn activePlayer;
     public int ownID = -1;
@@ -22,7 +23,7 @@ public partial class UiManager : Node2D
     {
         label = GetNode<Label>("Label");
         deck = GetNode<DeckScn>("DeckScn");
-        tableCards = GetNode<TableCardsN>("TableCardsN");
+        tableCards = GetNode<TableCards>("TableCards");
         activeTurnDisplay = GetNode<Label>("ActiveTurnDisplay");
         players[0] = GetNode<PlayerScn>("Player");
         players[1] = GetNode<PlayerScn>("Player2");
@@ -57,6 +58,7 @@ public partial class UiManager : Node2D
         activePlayerId = activeId;
         activePlayer = players[activeId];
         activePlayer.setActive(true);
+        highlightHandCards();
     }
 
     public void moveDeckToPlayerHand(int playerId)
@@ -97,7 +99,7 @@ public partial class UiManager : Node2D
                 if (y.card.isValid() && y.card.month == x.card.month)
                 {
                     retList.Add(x.card);
-                    continue;
+                    break;
                 }
             }
         }
@@ -224,4 +226,24 @@ public partial class UiManager : Node2D
         tableCards.overwriteEmptyCard(cardScn, idx);
     }
 
+    public bool belongsToActivePlayer(CardScn card)
+    {
+        var retVal = false;
+        foreach (var x in activePlayer.handCards.cardScns)
+        {
+            if (x.card.isEqual(card.card))
+            {
+                retVal = true;
+            }
+        }
+        return retVal;
+    }
+
+    public void handleDeckChoose()
+    {
+        setOpenCardVis(true);
+        if (activePlayerId != ownID) { return; }
+        highlightTableCards(deck.cards[0]);
+        uiMode = UiModes.DeckTurn;
+    }
 }
