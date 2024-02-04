@@ -13,6 +13,7 @@ public partial class PlayerScn : Node2D
 	{
 		handCards = GetNode<HandScn>("HandScn");
 		openCards = GetNode<OpenCards>("OpenCards");
+
 	}
 
 	public void setPlayer(Player player)

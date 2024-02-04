@@ -44,9 +44,9 @@ public class Serializer
     public static List<Card> deserializeCards(byte[] bytes)
     {
         var cards = new List<Card>();
-        foreach (var x in bytes.Chunk(3))
+        foreach (var x in bytes)
         {
-            cards.Add(Card.deserialize(x));
+            cards.Add(Card.deserialize(new byte[] { x }));
         }
         return cards;
     }

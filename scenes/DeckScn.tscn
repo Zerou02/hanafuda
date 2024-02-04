@@ -9,5 +9,3 @@ script = ExtResource("1_gfu7x")
 [node name="Floor" parent="." instance=ExtResource("3_dkpyq")]
 position = Vector2(26, -5)
 rotation = 0.944282
-
-[node name="UpperCard" parent="." instance=ExtResource("3_dkpyq")]

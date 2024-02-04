@@ -7,7 +7,7 @@
 [node name="PlayerScn" type="Node2D"]
 script = ExtResource("1_ishvp")
 
+[node name="OpenCards" parent="." instance=ExtResource("3_cnw4x")]
+
 [node name="HandScn" parent="." instance=ExtResource("3_1n4pb")]
 position = Vector2(1, 220)
-
-[node name="OpenCards" parent="." instance=ExtResource("3_cnw4x")]

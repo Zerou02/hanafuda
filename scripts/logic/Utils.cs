@@ -61,6 +61,8 @@ public class Utils
 
     public static bool byteToBool(byte val)
     {
-        return val == (byte)1 ? true : false;
+        var retVal = val == (byte)1 ? true : false;
+        GD.Print(retVal);
+        return retVal;
     }
 }

@@ -34,6 +34,7 @@ public partial class CardScn : Node2D
 		setCard(new Card(0, 0));
 		area2D.MouseEntered += () => inputManager.mouseEnteredOnCard(this);
 		area2D.MouseExited += () => inputManager.mouseExitedOnCard(this);
+
 	}
 
 	public void setCard(Card card)
@@ -147,7 +148,13 @@ public partial class CardScn : Node2D
 
 	public Rect2 getBounds()
 	{
-		var bounds = sprite2D.GetRect();
-		return new Rect2(bounds.Position, bounds.Size * sprite2D.Scale);
+		var bounds = sprite2D.GetScaledRect();
+		return new Rect2(bounds.Position, bounds.Size);
+	}
+
+	public void setSize(Vector2 size)
+	{
+		var baseSize = this.sprite2D.GetScaledRect().Size;
+		this.Scale = new Vector2(size.X / baseSize.X, size.X / baseSize.X);
 	}
 }

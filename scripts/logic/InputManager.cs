@@ -19,12 +19,11 @@ public partial class InputManager : Node
 
 	public void emptyTableCardPressed(int idx)
 	{
-		GD.Print("selectedCard", selectedCard);
 		if (selectedCard == null) { return; }
 		var cardBytes = Card.serialize(selectedCard.card);
-		var bytes = new byte[4];
+		var bytes = new byte[Constants.serializedCardLength + 1];
 		cardBytes.CopyTo(bytes, 0);
-		bytes[3] = (byte)idx;
+		bytes[Constants.serializedCardLength] = (byte)idx;
 		uiManager.server.command(MessageType.MatchEmptyTableCard, bytes);
 		selectedCard = null;
 		uiManager.unHighlightTableCards();
@@ -34,36 +33,25 @@ public partial class InputManager : Node
 
 	public void flowerTableCardPressed(CardScn cardScn)
 	{
+		if (!cardScn.card.isValid()) { return; }
 		if (uiManager.uiMode == UiModes.DeckTurn)
 		{
-
-		}
-		else
-		{
-
-		}
-		if (selectedCard == null && uiManager.uiMode == UiModes.PlayerTurn) { return; }
-		if (uiManager.uiMode != UiModes.DeckTurn)
-		{
-			if (cardScn.type != CardType.Table || cardScn.card.month != selectedCard.card.month) { return; }
-		}
-		uiManager.activePlayer.unHighlightHandCards();
-		if (uiManager.uiMode == UiModes.DeckTurn)
-		{
-			uiManager.server.command(MessageType.MatchTableCardWithDeck, Serializer.serializeCards(new List<Card>() { uiManager.deck.cards[0].card.clone(), cardScn.card }));
-		}
-		else
-		{
-			uiManager.server.command(MessageType.MatchTableCard, Serializer.serializeCards(new List<Card>() { selectedCard.card, cardScn.card }));
-		}
-		selectedCard = null;
-		uiManager.unHighlightTableCards();
-		if (uiManager.uiMode == UiModes.DeckTurn)
-		{
+			var card = uiManager.deck.cards[0].card.clone();
+			if (cardScn.card.month != card.month) { return; }
+			uiManager.activePlayer.unHighlightHandCards();
+			uiManager.server.command(MessageType.MatchTableCardWithDeck, Serializer.serializeCards(new List<Card>() { card, cardScn.card }));
+			uiManager.server.command(MessageType.UiModeSetPlayerTurn, new byte[] { });
 			uiManager.server.command(MessageType.SwitchPlayer, new byte[] { });
+
 		}
 		else
 		{
+			if (selectedCard == null) { return; }
+			if (cardScn.type != CardType.Table || cardScn.card.month != selectedCard.card.month) { return; }
+			uiManager.activePlayer.unHighlightHandCards();
+			uiManager.server.command(MessageType.MatchTableCard, Serializer.serializeCards(new List<Card>() { selectedCard.card, cardScn.card }));
+			selectedCard = null;
+			uiManager.unHighlightTableCards();
 			uiManager.server.command(MessageType.StartDeckTurn, new byte[] { });
 		}
 	}

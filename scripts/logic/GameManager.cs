@@ -31,7 +31,6 @@ public class GameManager
         {
             for (int i = 0; i < 8; i++)
             {
-                GD.Print(i);
                 server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.Hand, x));
             }
         }
@@ -78,15 +77,19 @@ public class GameManager
     {
         if (deckCard == null) { return; }
         var matches = matchTableCards(deckCard, tableCards);
-        GD.Print("countmatches", matches.Count);
+        GD.Print("MATCHES", matches.Count);
         if (matches.Count == 0)
         {
-            server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.TableCard, findFirstInvalidIdx(tableCards)));
+            var invalidIdx = findFirstInvalidIdx(tableCards);
+            GD.Print(invalidIdx);
+            server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.TableCard, invalidIdx));
+            server.command(MessageType.UiModeSetPlayerTurn, new byte[] { });
             server.command(MessageType.SwitchPlayer, new byte[] { });
         }
         else if (matches.Count == 1)
         {
             server.command(MessageType.MatchTableCardWithDeck, Serializer.serializeCards(new List<Card>() { deckCard, matches[0] }));
+            server.command(MessageType.UiModeSetPlayerTurn, new byte[] { });
             server.command(MessageType.SwitchPlayer, new byte[] { });
         }
         else

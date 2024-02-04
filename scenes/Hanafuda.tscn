@@ -29,13 +29,13 @@ text = "No Turn"
 [node name="Player" parent="UiManager" instance=ExtResource("2_xrwn3")]
 position = Vector2(105, 63)
 
-[node name="HandScn" parent="UiManager/Player" index="0"]
+[node name="HandScn" parent="UiManager/Player" index="1"]
 position = Vector2(0, 111)
 
 [node name="Player2" parent="UiManager" instance=ExtResource("2_xrwn3")]
 position = Vector2(85, 463)
 
-[node name="HandScn" parent="UiManager/Player2" index="0"]
+[node name="HandScn" parent="UiManager/Player2" index="1"]
 position = Vector2(3, 122)
 
 [node name="DeckScn" parent="UiManager" instance=ExtResource("3_pbd45")]

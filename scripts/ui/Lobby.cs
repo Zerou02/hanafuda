@@ -60,7 +60,6 @@ public partial class Lobby : Node2D
 	[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false, TransferChannel = 0, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
 	public void sendMessage(MessageType type, byte[] bytes)
 	{
-		GD.Print("whoever received");
 		if (type == MessageType.MatchTableCard)
 		{
 			matchTableCard(bytes);
@@ -97,11 +96,17 @@ public partial class Lobby : Node2D
 		{
 			handleDeckChoose();
 		}
+		else if (type == MessageType.UiModeSetPlayerTurn)
+		{
+			hanafuda.uiManager.uiMode = UiModes.PlayerTurn;
+		}
 	}
 
 	public void switchPlayer()
 	{
 		var newActivePlayerID = (hanafuda.uiManager.activePlayerId + 1) % hanafuda.uiManager.players.Length;
+		hanafuda.uiManager.unHighlightTableCards();
+		hanafuda.uiManager.activePlayer.handCards.highlightCards(new List<Card>());
 		hanafuda.uiManager.setActivePlayer(newActivePlayerID);
 	}
 	void initDeck(byte[] bytes)
@@ -112,19 +117,20 @@ public partial class Lobby : Node2D
 	void moveCard(byte[] bytes)
 	{
 		var pos = Serializer.deSerializeCardMove(bytes);
+		GD.Print("A", pos);
+
 		if ((CardPosition)pos.source == CardPosition.Deck)
 		{
 			if ((CardPosition)pos.dest == CardPosition.Hand)
 			{
+				GD.Print("B");
+
 				hanafuda.uiManager.moveDeckToPlayerHand(pos.destIdx);
 			}
 			else if ((CardPosition)pos.dest == CardPosition.TableCard)
 			{
-				// endOfCard
-				if (pos.destIdx == 255)
-				{
-					hanafuda.uiManager.moveDeckToTable();
-				}
+				GD.Print("D");
+				hanafuda.uiManager.moveDeckToTable();
 			}
 		}
 	}
@@ -144,13 +150,13 @@ public partial class Lobby : Node2D
 
 	public void matchEmptyTableCard(byte[] bytes)
 	{
-		var cardBytes = new byte[3];
-		for (int i = 0; i < 3; i++)
+		var cardBytes = new byte[Constants.serializedCardLength];
+		for (int i = 0; i < Constants.serializedCardLength; i++)
 		{
 			cardBytes[i] = bytes[i];
 		}
 		var cards = Serializer.deserializeCards(cardBytes);
-		var idx = bytes[3];
+		var idx = bytes[Constants.serializedCardLength];
 		hanafuda.uiManager.matchEmptyCard(cards[0], idx);
 	}
 	public void command(MessageType type, byte[] bytes)
@@ -206,6 +212,11 @@ public partial class Lobby : Node2D
 		else if (type == MessageType.DeckChoose)
 		{
 			handleDeckChoose();
+			Rpc("sendMessage", (int)type, bytes);
+		}
+		else if (type == MessageType.UiModeSetPlayerTurn)
+		{
+			hanafuda.uiManager.uiMode = UiModes.PlayerTurn;
 			Rpc("sendMessage", (int)type, bytes);
 		}
 	}

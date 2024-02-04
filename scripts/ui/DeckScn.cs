@@ -9,6 +9,7 @@ public partial class DeckScn : Node2D
 	{
 		floor = GetNode<CardScn>("Floor");
 		floor.setCard(Card.GetEmpty());
+
 		floor.setAllowInteraction(false);
 	}
 
@@ -22,7 +23,6 @@ public partial class DeckScn : Node2D
 		this.cards.Add(cardScn);
 		cardScn.setAllowInteraction(false);
 		cardScn.isOpen = false;
-		GD.Print(cards.Count);
 	}
 	public CardScn draw()
 	{

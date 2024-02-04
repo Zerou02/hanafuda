@@ -79,6 +79,7 @@ public partial class UiManager : Node2D
         highlightHandCards();
 
     }
+
     public void setDeck(List<Card> cards)
     {
         foreach (var x in cards)
