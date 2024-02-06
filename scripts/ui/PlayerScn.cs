@@ -6,6 +6,7 @@ public partial class PlayerScn : Node2D
 	public HandScn handCards;
 	public OpenCards openCards;
 	bool isActive = false;
+	bool isEnemy = false;
 
 	[Signal]
 	public delegate void cardSelectedEventHandler(CardScn cardScn);
@@ -14,6 +15,14 @@ public partial class PlayerScn : Node2D
 		handCards = GetNode<HandScn>("HandScn");
 		openCards = GetNode<OpenCards>("OpenCards");
 
+	}
+
+	public void toggleIsEnemy()
+	{
+		isEnemy = !isEnemy;
+		var handPos = handCards.Position;
+		handCards.Position = openCards.Position;
+		openCards.Position = handPos;
 	}
 
 	public void setPlayer(Player player)
@@ -39,6 +48,10 @@ public partial class PlayerScn : Node2D
 	}
 	public void addHandCard(CardScn cardScn)
 	{
+		if (isEnemy)
+		{
+			cardScn.isOpen = false;
+		}
 		handCards.addCardScn(cardScn);
 	}
 

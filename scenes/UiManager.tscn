@@ -1,6 +1,63 @@
-[gd_scene load_steps=2 format=3 uid="uid://wp0yy6sjr8id"]
+[gd_scene load_steps=4 format=3 uid="uid://wp0yy6sjr8id"]
 
 [ext_resource type="Script" path="res://scripts/ui/UiManager.cs" id="1_pdavx"]
+[ext_resource type="PackedScene" uid="uid://do3k6c7gywl1y" path="res://scenes/KoiKoiSelection.tscn" id="2_sco44"]
+[ext_resource type="Script" path="res://scripts/ui/UiRoot.cs" id="2_x62xs"]
 
 [node name="UiManager" type="Node2D"]
 script = ExtResource("1_pdavx")
+
+[node name="UiRoot" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 1151.0
+offset_bottom = 647.0
+mouse_filter = 2
+script = ExtResource("2_x62xs")
+
+[node name="KoiKoiSelection" parent="UiRoot" instance=ExtResource("2_sco44")]
+layout_mode = 1
+anchor_left = 0.323
+anchor_top = 0.19
+anchor_right = 0.605
+anchor_bottom = 0.777
+
+[node name="TurnCounter" type="Label" parent="UiRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.765
+anchor_top = 0.955
+anchor_right = 0.938
+anchor_bottom = 1.0
+text = "Runde X/X"
+
+[node name="ActiveTurnDisplay" type="Label" parent="UiRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.766
+anchor_top = 0.905
+anchor_right = 0.918
+anchor_bottom = 0.948
+text = "Du bist am Zug."
+
+[node name="OwnPoints" type="Label" parent="UiRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.758
+anchor_top = 0.632
+anchor_right = 0.918
+anchor_bottom = 0.724
+offset_left = 0.541992
+offset_right = 0.381958
+text = "Punkte: X"
+
+[node name="EnemyPoints" type="Label" parent="UiRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.758
+anchor_top = 0.075
+anchor_right = 0.918
+anchor_bottom = 0.2
+offset_left = 0.541992
+offset_right = 0.381958
+text = "Punkte: X"

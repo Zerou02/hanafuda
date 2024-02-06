@@ -39,15 +39,17 @@ public partial class OpenCards : Node2D
 
 		var paddingY = 4;
 		Flexbox.alignLeft(new Rect2(0, 0, 200, Constants.cardHeight), upperLeft);
-		Flexbox.alignLeft(new Rect2(200, 0, 200, Constants.cardHeight), upperRight);
+		Flexbox.alignLeft(new Rect2(300, 0, 200, Constants.cardHeight), upperRight);
 		Flexbox.alignLeft(new Rect2(0, Constants.cardHeight + paddingY, 200, Constants.cardHeight), lowerLeft);
-		Flexbox.alignLeft(new Rect2(200, Constants.cardHeight + paddingY, 200, Constants.cardHeight), lowerRight);
+		Flexbox.alignLeft(new Rect2(300, Constants.cardHeight + paddingY, 200, Constants.cardHeight), lowerRight);
 	}
 	public void addCardScn(CardScn cardScn)
 	{
 		this.cardScns.Add(cardScn);
+		cardScn.isOpen = true;
 		Utils.reparentTo(cardScn, this);
 		cardScn.setAllowInteraction(false);
 		renderCards();
 	}
+
 }

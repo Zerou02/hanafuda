@@ -41,10 +41,9 @@ public partial class InputManager : Node
 			uiManager.activePlayer.unHighlightHandCards();
 			uiManager.server.command(MessageType.MatchTableCardWithDeck, Serializer.serializeCards(new List<Card>() { card, cardScn.card }));
 			uiManager.server.command(MessageType.UiModeSetPlayerTurn, new byte[] { });
-			uiManager.server.command(MessageType.SwitchPlayer, new byte[] { });
-
+			uiManager.server.command(MessageType.CheckHasSet, new byte[] { });
 		}
-		else
+		else if (uiManager.uiMode == UiModes.PlayerTurn)
 		{
 			if (selectedCard == null) { return; }
 			if (cardScn.type != CardType.Table || cardScn.card.month != selectedCard.card.month) { return; }
@@ -52,6 +51,7 @@ public partial class InputManager : Node
 			uiManager.server.command(MessageType.MatchTableCard, Serializer.serializeCards(new List<Card>() { selectedCard.card, cardScn.card }));
 			selectedCard = null;
 			uiManager.unHighlightTableCards();
+			GD.Print("startDeckTurnEEE");
 			uiManager.server.command(MessageType.StartDeckTurn, new byte[] { });
 		}
 	}

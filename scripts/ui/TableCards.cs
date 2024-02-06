@@ -15,6 +15,7 @@ public partial class TableCards : Node2D
 	}
 	public override void _Process(double delta)
 	{
+		cardScns.ForEach(x => { x.isOpen = true; });
 	}
 
 	void renderCards()

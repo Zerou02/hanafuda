@@ -12,37 +12,27 @@ script = ExtResource("1_jel01")
 
 [node name="UiManager" parent="." instance=ExtResource("2_j4nvj")]
 
-[node name="Label" type="Label" parent="UiManager"]
-offset_left = 639.0
-offset_top = 17.0
-offset_right = 682.0
-offset_bottom = 40.0
-text = "asdfa"
+[node name="EnemyPlayerMarker" type="Marker2D" parent="UiManager"]
+position = Vector2(104, 38)
 
-[node name="ActiveTurnDisplay" type="Label" parent="UiManager"]
-offset_left = 639.0
-offset_top = 42.0
-offset_right = 682.0
-offset_bottom = 65.0
-text = "No Turn"
+[node name="EnemyPlayer" parent="UiManager/EnemyPlayerMarker" instance=ExtResource("2_xrwn3")]
 
-[node name="Player" parent="UiManager" instance=ExtResource("2_xrwn3")]
-position = Vector2(105, 63)
-
-[node name="HandScn" parent="UiManager/Player" index="1"]
+[node name="HandScn" parent="UiManager/EnemyPlayerMarker/EnemyPlayer" index="1"]
 position = Vector2(0, 111)
 
-[node name="Player2" parent="UiManager" instance=ExtResource("2_xrwn3")]
-position = Vector2(85, 463)
+[node name="OwnPlayerMarker" type="Marker2D" parent="UiManager"]
+position = Vector2(89, 426)
 
-[node name="HandScn" parent="UiManager/Player2" index="1"]
+[node name="OwnPlayer" parent="UiManager/OwnPlayerMarker" instance=ExtResource("2_xrwn3")]
+
+[node name="HandScn" parent="UiManager/OwnPlayerMarker/OwnPlayer" index="1"]
 position = Vector2(3, 122)
 
 [node name="DeckScn" parent="UiManager" instance=ExtResource("3_pbd45")]
 position = Vector2(40, 246)
 
 [node name="TableCards" parent="UiManager" instance=ExtResource("5_en43w")]
-position = Vector2(136, 255)
+position = Vector2(135, 230)
 
 [node name="MouseRayCaster" type="RayCast2D" parent="."]
 target_position = Vector2(0, 0)
@@ -50,5 +40,5 @@ hit_from_inside = true
 collide_with_areas = true
 script = ExtResource("3_3y3bd")
 
-[editable path="UiManager/Player"]
-[editable path="UiManager/Player2"]
+[editable path="UiManager/EnemyPlayerMarker/EnemyPlayer"]
+[editable path="UiManager/OwnPlayerMarker/OwnPlayer"]

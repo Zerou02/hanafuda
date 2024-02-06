@@ -155,6 +155,6 @@ public partial class CardScn : Node2D
 	public void setSize(Vector2 size)
 	{
 		var baseSize = this.sprite2D.GetScaledRect().Size;
-		this.Scale = new Vector2(size.X / baseSize.X, size.X / baseSize.X);
+		this.Scale = size / baseSize;
 	}
 }

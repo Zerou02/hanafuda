@@ -73,6 +73,8 @@ public class GameManager
         }
         return idx;
     }
+
+
     public static void startDeckTurn(Lobby server, Card deckCard, List<Card> tableCards)
     {
         if (deckCard == null) { return; }
@@ -84,18 +86,80 @@ public class GameManager
             GD.Print(invalidIdx);
             server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.TableCard, invalidIdx));
             server.command(MessageType.UiModeSetPlayerTurn, new byte[] { });
-            server.command(MessageType.SwitchPlayer, new byte[] { });
+            server.command(MessageType.CheckHasSet, new byte[] { });
         }
         else if (matches.Count == 1)
         {
             server.command(MessageType.MatchTableCardWithDeck, Serializer.serializeCards(new List<Card>() { deckCard, matches[0] }));
             server.command(MessageType.UiModeSetPlayerTurn, new byte[] { });
-            server.command(MessageType.SwitchPlayer, new byte[] { });
+            server.command(MessageType.CheckHasSet, new byte[] { });
         }
         else
         {
             server.command(MessageType.OpenDeckCard, new byte[] { });
             server.command(MessageType.DeckChoose, new byte[] { });
         }
+    }
+
+    public static int calculateTotalPoints(Dictionary<Sets, List<Card>> set, int amountKoiKois)
+    {
+        var points = calculatePointsArr(set, amountKoiKois);
+        var sum = 0;
+        foreach (var x in points)
+        {
+            sum += x;
+        }
+        return sum;
+    }
+    public static int[] calculatePointsArr(Dictionary<Sets, List<Card>> set, int amountKoiKois)
+    {
+        var pointArr = new int[12];
+        foreach (var x in set)
+        {
+            switch (x.Key)
+            {
+                case Sets.Plain:
+                    pointArr[(int)Sets.Plain] = x.Value.Count - 9;
+                    break;
+                case Sets.Scrolls:
+                    pointArr[(int)Sets.Scrolls] = x.Value.Count - 4;
+                    break;
+                case Sets.Animals:
+                    pointArr[(int)Sets.Animals] = x.Value.Count - 4;
+                    break;
+                case Sets.BlueScrolls:
+                    pointArr[(int)Sets.BlueScrolls] = 6;
+                    break;
+                case Sets.PoetryScrolls:
+                    pointArr[(int)Sets.PoetryScrolls] = 6;
+                    break;
+                case Sets.InoShikaChou:
+                    pointArr[(int)Sets.InoShikaChou] = 6;
+                    break;
+                case Sets.Tsukimi:
+                    pointArr[(int)Sets.Tsukimi] = 5;
+                    break;
+                case Sets.Hanami:
+                    pointArr[(int)Sets.Hanami] = 5;
+                    break;
+                case Sets.Sankou:
+                    pointArr[(int)Sets.Sankou] = 6;
+                    break;
+                case Sets.Ameshikou:
+                    pointArr[(int)Sets.Ameshikou] = 8;
+                    break;
+                case Sets.Shikou:
+                    pointArr[(int)Sets.Shikou] = 9;
+                    break;
+                case Sets.Gokou:
+                    pointArr[(int)Sets.Gokou] = 12;
+                    break;
+            }
+        }
+        for (int i = 0; i < pointArr.Length; i++)
+        {
+            pointArr[i] *= amountKoiKois;
+        }
+        return pointArr;
     }
 }

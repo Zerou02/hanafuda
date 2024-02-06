@@ -65,4 +65,36 @@ public class Utils
         GD.Print(retVal);
         return retVal;
     }
+
+    public static bool cardListsSame(List<Card> list1, List<Card> list2)
+    {
+        if (list1.Count != list2.Count) { return false; }
+        var retVal = true;
+        for (int i = 0; i < list1.Count; i++)
+        {
+            if (!list1[i].isEqual(list2[i])) { retVal = false; break; }
+        }
+        return retVal;
+    }
+    public static void printDictList<T, K>(Dictionary<T, List<K>> dict) where T : notnull
+    {
+        foreach (var x in dict)
+        {
+            GD.Print(x.Key);
+            foreach (var y in x.Value)
+            {
+                GD.Print(y);
+            }
+            GD.Print();
+        }
+    }
+
+    public static List<CardScn> clearCardsScns(List<CardScn> cardScns)
+    {
+        foreach (var x in cardScns)
+        {
+            x.QueueFree();
+        }
+        return new List<CardScn>();
+    }
 }

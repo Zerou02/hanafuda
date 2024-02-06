@@ -1,9 +1,7 @@
 using Godot;
 using System.Collections.Generic;
-using System.Net.Http.Headers;
-using System.Threading;
 
-public enum UiModes { PlayerTurn, DeckTurn };
+public enum UiModes { PlayerTurn, DeckTurn, UiTurn };
 public partial class UiManager : Node2D
 {
     public DeckScn deck;
@@ -13,38 +11,55 @@ public partial class UiManager : Node2D
     public int ownID = -1;
     public int activePlayerId = 0;
     public UiModes uiMode = UiModes.PlayerTurn;
-    Label label;
 
+    public int amountKoiKois = 1;
+
+    public int ownPoints = 30;
+    public int enemyPoints = 30;
+    public int currTurn = 1;
+    public int maxTurn = 3;
     PackedScene cardScn = GD.Load<PackedScene>("scenes/Card.tscn");
     InputManager inputManager;
     public Lobby server;
     public Label activeTurnDisplay;
+    public Label turnCounter;
+    public Label ownPointsLabel;
+    public Label enemyPointsLabel;
+    KoiKoiSelection koiKoiSelection;
+    Control uiRoot;
+    Marker2D ownMarker;
+    Marker2D enemyMarker;
+    public Dictionary<Sets, List<Card>>? lastSet = null;
     public override void _Ready()
     {
-        label = GetNode<Label>("Label");
+        inputManager = GetNode<InputManager>(Constants.inputManagerPath);
+        uiRoot = GetNode<Control>("UiRoot");
+        koiKoiSelection = GetNode<KoiKoiSelection>("UiRoot/KoiKoiSelection");
+        activeTurnDisplay = GetNode<Label>("UiRoot/ActiveTurnDisplay");
+        turnCounter = GetNode<Label>("UiRoot/TurnCounter");
+        ownPointsLabel = GetNode<Label>("UiRoot/OwnPoints");
+        enemyPointsLabel = GetNode<Label>("UiRoot/EnemyPoints");
+
         deck = GetNode<DeckScn>("DeckScn");
         tableCards = GetNode<TableCards>("TableCards");
-        activeTurnDisplay = GetNode<Label>("ActiveTurnDisplay");
-        players[0] = GetNode<PlayerScn>("Player");
-        players[1] = GetNode<PlayerScn>("Player2");
-        inputManager = GetNode<InputManager>(Constants.inputManagerPath);
+        ownMarker = GetNode<Marker2D>("OwnPlayerMarker");
+        enemyMarker = GetNode<Marker2D>("EnemyPlayerMarker");
+
+        players[0] = GetNode<PlayerScn>("EnemyPlayerMarker/EnemyPlayer");
+        players[1] = GetNode<PlayerScn>("OwnPlayerMarker/OwnPlayer");
         inputManager.uiManager = this;
-        //        tableCards.emptyCardPressed += (idx) => handleEmptyCardPressed(idx);
-        // tableCards.flowerCardPressed += (cardScn) => handleHanafudaTableCardPressed(cardScn);
-        foreach (var x in players)
-        {
-            x.cardSelected += (x) => handleCardSelected(x);
-        }
+        koiKoiSelection.koiKoiPressed += () => handleKoiKoiPressed();
+        koiKoiSelection.stopPressed += () => handleStop();
+        var example = new Dictionary<Sets, List<Card>>() { { Sets.Tsukimi, new List<Card>() { new Card(2, 0), new Card(2, 2) } }, { Sets.Hanami, new List<Card>() { new Card(3, 0), new Card(3, 2) } }, { Sets.Plain, new List<Card>() { new Card(4, 0), new Card(5, 0) } } };
+        lastSet = example;
+        GD.Print(isNewKoiKoi(example));
     }
 
-    public void handleCardSelected(CardScn cardScn)
-    {
-        if (uiMode == UiModes.DeckTurn) { return; }
-        //        highlightTableCards();
-    }
     public override void _Process(double delta)
     {
-        label.Text = ownID.ToString();
+        turnCounter.Text = currTurn.ToString() + " / " + maxTurn.ToString();
+        ownPointsLabel.Text = ownPoints.ToString();
+        enemyPointsLabel.Text = enemyPoints.ToString();
         activeTurnDisplay.Text = ownID == activePlayerId ? "Your Turn" : "Enemy Turn";
     }
 
@@ -61,6 +76,16 @@ public partial class UiManager : Node2D
         highlightHandCards();
     }
 
+    public void clearAll()
+    {
+        tableCards.cardScns = Utils.clearCardsScns(tableCards.cardScns);
+        deck.cards = Utils.clearCardsScns(deck.cards);
+        foreach (var x in players)
+        {
+            x.handCards.cardScns = Utils.clearCardsScns(x.handCards.cardScns);
+            x.openCards.cardScns = Utils.clearCardsScns(x.openCards.cardScns);
+        }
+    }
     public void moveDeckToPlayerHand(int playerId)
     {
         var card = deck.draw();
@@ -217,6 +242,24 @@ public partial class UiManager : Node2D
         activePlayer.setSelectedCard(cardScn);
     }
 
+    public void setOwnId(int id)
+    {
+        ownID = id;
+        if (ownID == 0)
+        {
+            Utils.reparentTo(players[0], ownMarker);
+            Utils.reparentTo(players[1], enemyMarker);
+            players[1].toggleIsEnemy();
+        }
+        else
+        {
+            Utils.reparentTo(players[1], ownMarker);
+            Utils.reparentTo(players[0], enemyMarker);
+            players[0].toggleIsEnemy();
+        }
+        players[0].Position = new Vector2(0, 0);
+        players[1].Position = new Vector2(0, 0);
+    }
 
     public void matchEmptyCard(Card card, int idx)
     {
@@ -238,6 +281,53 @@ public partial class UiManager : Node2D
             }
         }
         return retVal;
+    }
+
+    public bool isNewKoiKoi(Dictionary<Sets, List<Card>> toCheck)
+    {
+        if (lastSet == null || lastSet.Count != toCheck.Count) { return true; }
+        var retVal = true;
+        foreach (var x in lastSet)
+        {
+            if (x.Key == Sets.Plain || x.Key == Sets.Scrolls || x.Key == Sets.Animals) { continue; }
+            if (Utils.cardListsSame(x.Value, toCheck[x.Key]))
+            {
+                retVal = false;
+                break;
+            }
+        }
+        return retVal;
+    }
+
+    public void displayKoiKoiMenu(Dictionary<Sets, List<Card>> cards)
+    {
+        if (!isNewKoiKoi(cards))
+        {
+            server.command(MessageType.SwitchPlayer, new byte[] { });
+            return;
+        }
+        lastSet = cards;
+        Utils.printDictList(cards);
+        koiKoiSelection.setCards(cards, amountKoiKois);
+        koiKoiSelection.MoveToFront();
+        uiMode = UiModes.UiTurn;
+    }
+
+    public void handleKoiKoiPressed()
+    {
+        server.command(MessageType.KoiKoiPressed, new byte[] { });
+        server.command(MessageType.SwitchPlayer, new byte[] { });
+    }
+
+    public void handleStop()
+    {
+        if (lastSet == null) { return; }
+        var points = GameManager.calculateTotalPoints(lastSet, amountKoiKois);
+        server.command(MessageType.RoundEnded, new byte[] { (byte)points });
+    }
+    public void handlerServerKoiKoiPressed()
+    {
+        this.amountKoiKois += 1;
     }
 
     public void handleDeckChoose()
