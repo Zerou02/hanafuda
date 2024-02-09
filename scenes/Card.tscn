@@ -13,14 +13,14 @@ shader = ExtResource("4_w3r5s")
 shader_parameter/blendTex = ExtResource("5_yqw8e")
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_y5g5i"]
-size = Vector2(31, 49)
+size = Vector2(40, 59)
 
 [node name="Card" type="Node2D"]
 script = ExtResource("1_gu2cp")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
 position = Vector2(9.53674e-07, 1.90735e-06)
-scale = Vector2(0.442857, 0.429825)
+scale = Vector2(0.571429, 0.526786)
 texture = ExtResource("2_k7v3l")
 offset = Vector2(35, 56)
 region_enabled = true
@@ -29,26 +29,27 @@ region_rect = Rect2(0, 0, 70, 112)
 [node name="ValidTexture" type="Sprite2D" parent="."]
 visible = false
 material = SubResource("ShaderMaterial_8cd5i")
-position = Vector2(15.5, 24.5)
-scale = Vector2(0.152344, 0.230469)
+position = Vector2(20, 30)
+scale = Vector2(0.203125, 0.28125)
 texture = ExtResource("6_o20md")
 
 [node name="SelectTexture" type="Sprite2D" parent="."]
 visible = false
 material = SubResource("ShaderMaterial_8cd5i")
-position = Vector2(15.5, 24.5)
-scale = Vector2(0.0761719, 0.115234)
+position = Vector2(20, 29.5)
+scale = Vector2(0.101562, 0.138672)
 texture = ExtResource("6_nsxsr")
 
 [node name="HoverTexture" type="Sprite2D" parent="."]
 visible = false
 material = SubResource("ShaderMaterial_8cd5i")
-position = Vector2(15.5, 24.5)
-scale = Vector2(0.0761719, 0.115234)
+position = Vector2(20, 29.5)
+scale = Vector2(0.101562, 0.138672)
 texture = ExtResource("7_ymh66")
 
 [node name="Area2D" type="Area2D" parent="."]
 position = Vector2(15.5, 24.5)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(4.5, 5)
 shape = SubResource("RectangleShape2D_y5g5i")

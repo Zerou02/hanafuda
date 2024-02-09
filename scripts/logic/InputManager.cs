@@ -51,7 +51,6 @@ public partial class InputManager : Node
 			uiManager.server.command(MessageType.MatchTableCard, Serializer.serializeCards(new List<Card>() { selectedCard.card, cardScn.card }));
 			selectedCard = null;
 			uiManager.unHighlightTableCards();
-			GD.Print("startDeckTurnEEE");
 			uiManager.server.command(MessageType.StartDeckTurn, new byte[] { });
 		}
 	}

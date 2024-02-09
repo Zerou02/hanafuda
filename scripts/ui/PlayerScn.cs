@@ -23,6 +23,9 @@ public partial class PlayerScn : Node2D
 		var handPos = handCards.Position;
 		handCards.Position = openCards.Position;
 		openCards.Position = handPos;
+		openCards.Position = new Vector2(-100, openCards.Position.Y);
+		handCards.Position = new Vector2(0, handCards.Position.Y);
+
 	}
 
 	public void setPlayer(Player player)

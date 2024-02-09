@@ -1,37 +1,46 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Net.Security;
 using Godot;
 
-public partial class Lobby : Node2D
+public partial class Lobby : Control
 {
-	Button host;
-	Button connnect;
 	PackedScene hanafudaScn = GD.Load<PackedScene>("scenes/Hanafuda.tscn");
 	Hanafuda hanafuda;
 	ENetMultiplayerPeer peer;
+	ConnectionMenu connectionMenu;
+	TextureRect bgTex;
 	bool isHost;
 	public override void _Ready()
 	{
-		host = GetNode<Button>("Host");
-		connnect = GetNode<Button>("Connect");
-
-		host.Pressed += () => createHost();
-		connnect.Pressed += () => createPeer();
+		bgTex = GetNode<TextureRect>("BgTex");
+		connectionMenu = GetNode<ConnectionMenu>("ConnectionMenu");
+		GD.Print(connectionMenu);
+		connectionMenu.connectPressed += (addr, name) => createPeer(addr, name);
+		connectionMenu.hostPressed += (addr, name) => createHost(addr, name);
 	}
 
-	void createPeer()
+	void createPeer(string addr, string name)
 	{
+		var port = int.Parse(addr.Split(":")[1]);
+		var dest = addr.Split(":")[0];
 		peer = new ENetMultiplayerPeer();
-		peer.CreateClient("127.0.0.1", 8080);
+		peer.CreateClient(dest, port);
 		GetTree().GetMultiplayer().MultiplayerPeer = peer;
 		isHost = false;
 		instantiateHanafuda(1);
 		peer.PeerConnected += (x) => command(MessageType.SetActivePlayer, new byte[] { 0 });
 		var deck = new Deck();
+		hanafuda.uiManager.playerName = name;
+		connectionMenu.Visible = false;
+
 		peer.PeerConnected += (x) =>
 		{
 			command(MessageType.PeerConnected, new byte[] { });
+			command(MessageType.SetEnemyName, name.ToUtf8Buffer());
+			command(MessageType.BothLoaded, new byte[] { });
 			command(MessageType.InitDeck, Serializer.serializeCards(deck.cards));
 		};
 	}
@@ -39,23 +48,22 @@ public partial class Lobby : Node2D
 	public void instantiateHanafuda(int playerId)
 	{
 		var hanafu = hanafudaScn.Instantiate<Hanafuda>();
-		host.QueueFree();
-		connnect.QueueFree();
-		host = null;
-		connnect = null;
 		this.AddChild(hanafu);
 		this.hanafuda = hanafu;
 		hanafuda.uiManager.setOwnId(playerId);
 		hanafuda.uiManager.server = this;
 	}
-	void createHost()
+	void createHost(string addr, string name)
 	{
-		peer = new ENetMultiplayerPeer();
-		peer.CreateServer(8080, 2);
+		var port = int.Parse(addr.Split(":")[1]);
+		var peer = new ENetMultiplayerPeer();
+		peer.CreateServer(port, 2);
 		GetTree().GetMultiplayer().MultiplayerPeer = peer;
 		isHost = true;
 		instantiateHanafuda(0);
 		hanafuda.uiManager.server = this;
+		hanafuda.uiManager.playerName = name;
+		connectionMenu.Visible = false;
 	}
 
 	public override void _Process(double delta)
@@ -63,7 +71,6 @@ public partial class Lobby : Node2D
 	}
 	public void switchPlayer()
 	{
-		GD.Print("switch from", hanafuda.uiManager.activePlayerId);
 		var newActivePlayerID = (hanafuda.uiManager.activePlayerId + 1) % hanafuda.uiManager.players.Length;
 		hanafuda.uiManager.unHighlightTableCards();
 		hanafuda.uiManager.activePlayer.handCards.highlightCards(new List<Card>());
@@ -171,7 +178,7 @@ public partial class Lobby : Node2D
 		}
 		else if (type == MessageType.PeerConnected)
 		{
-			command(MessageType.InitGame, Serializer.serializeGameConfig(0, 3, 30));
+			command(MessageType.InitGame, Serializer.serializeGameConfig(0, 1, 30));
 		}
 		else if (type == MessageType.InitGame)
 		{
@@ -185,6 +192,38 @@ public partial class Lobby : Node2D
 		else if (type == MessageType.ChangePoints)
 		{
 			changePoints(bytes[0]);
+		}
+		else if (type == MessageType.OutOfCards)
+		{
+			handleOutOfCards();
+		}
+		else if (type == MessageType.GameEnded)
+		{
+			handleGameEnd();
+		}
+		else if (type == MessageType.SetEnemyName)
+		{
+			handleSetName(bytes);
+			if (isHost)
+			{
+				command(MessageType.SetEnemyName, hanafuda.uiManager.playerName.ToUtf8Buffer());
+			}
+		}
+		else if (type == MessageType.BothLoaded)
+		{
+			killLoadingScreen();
+		}
+		else if (type == MessageType.Quit)
+		{
+			quit();
+		}
+		else if (type == MessageType.Rematch)
+		{
+			hanafuda.uiManager.rematchPressed += 1;
+			if (hanafuda.uiManager.rematchPressed == 2)
+			{
+				rematch();
+			}
 		}
 	}
 
@@ -222,7 +261,6 @@ public partial class Lobby : Node2D
 		}
 		else if (type == MessageType.InitDeck)
 		{
-			GD.Print("init");
 			Rpc("sendMessage", (int)type, bytes);
 			initDeck(bytes);
 			GameManager.handoutCardsAtStartOfGame(this, new List<int>() { 0, 1 });
@@ -254,7 +292,7 @@ public partial class Lobby : Node2D
 		else if (type == MessageType.DisplayKoiKoiMenu)
 		{
 			var set = Serializer.deserializeSet(bytes);
-			hanafuda.uiManager.displayKoiKoiMenu(calcCardsToSet(getOpenCards(), set));
+			hanafuda.uiManager.displayKoiKoiMenu(GameManager.calcCardsToSet(getOpenCards(), set));
 		}
 		else if (type == MessageType.KoiKoiPressed)
 		{
@@ -278,15 +316,14 @@ public partial class Lobby : Node2D
 		else if (type == MessageType.RoundEnded)
 		{
 			command(MessageType.ChangePoints, bytes);
-			if (hanafuda.uiManager.ownPoints == 0 || hanafuda.uiManager.enemyPoints == 0)
+			if (hanafuda.uiManager.ownPoints <= 0 || hanafuda.uiManager.enemyPoints <= 0 || hanafuda.uiManager.currTurn == hanafuda.uiManager.maxTurn)
 			{
 				command(MessageType.GameEnded, new byte[] { });
-				todog();
 			}
 			else
 			{
 				command(MessageType.InitDeck, Serializer.serializeCards(new Deck().cards));
-				command(MessageType.StartRound, new byte[] { (byte)(hanafuda.uiManager.activePlayerId == 1 ? 0 : 1) });
+				command(MessageType.StartRound, new byte[] { (byte)(hanafuda.uiManager.lastStartedId == 1 ? 0 : 1) });
 			}
 		}
 		else if (type == MessageType.ChangePoints)
@@ -294,8 +331,94 @@ public partial class Lobby : Node2D
 			changePoints(bytes[0]);
 			Rpc("sendMessage", (int)type, bytes);
 		}
+		else if (type == MessageType.OutOfCards)
+		{
+			handleOutOfCards();
+			if (hanafuda.uiManager.outOfCards == 2)
+			{
+				this.command(MessageType.RoundEnded, new byte[] { 0 });
+			}
+			else
+			{
+				Rpc("sendMessage", (int)type, bytes);
+				this.command(MessageType.SwitchPlayer, new byte[] { });
+			}
+		}
+		else if (type == MessageType.GameEnded)
+		{
+			handleGameEnd();
+			Rpc("sendMessage", (int)type, bytes);
+		}
+		else if (type == MessageType.SetEnemyName)
+		{
+			//	handleSetName(bytes);
+			Rpc("sendMessage", (int)type, hanafuda.uiManager.playerName.ToUtf8Buffer());
+		}
+		else if (type == MessageType.BothLoaded)
+		{
+			killLoadingScreen();
+			Rpc("sendMessage", (int)type, hanafuda.uiManager.playerName.ToUtf8Buffer());
+		}
+		else if (type == MessageType.Quit)
+		{
+			quit();
+			Rpc("sendMessage", (int)type, bytes);
+		}
+		else if (type == MessageType.Rematch)
+		{
+			hanafuda.uiManager.rematchPressed += 1;
+			if (hanafuda.uiManager.rematchPressed == 2)
+			{
+				rematch();
+				command(MessageType.RoundEnded, new byte[] { 0 });
+			}
+			Rpc("sendMessage", (int)type, bytes);
+		}
 	}
 
+	void rematch()
+	{
+		hanafuda.uiManager.rematchPressed = 0;
+		hanafuda.uiManager.currTurn = 1;
+		hanafuda.uiManager.ownPoints = 30;
+		hanafuda.uiManager.enemyPoints = 30;
+	}
+	void quit()
+	{
+		hanafuda.QueueFree();
+		hanafuda = null;
+		isHost = false;
+		peer = null;
+		connectionMenu.serverAddr.Text = "127.0.0.1:8080";
+		connectionMenu.playerName.Text = "";
+		connectionMenu.Visible = true;
+	}
+
+	void killLoadingScreen()
+	{
+		hanafuda.uiManager.loadingScreen.QueueFree();
+		bgTex.Texture = ResourceLoader.Load<CompressedTexture2D>("res://assets/carpet.png");
+	}
+	void handleSetName(byte[] name)
+	{
+		hanafuda.uiManager.enemyPlayerName = name.GetStringFromUtf8();
+	}
+	void handleGameEnd()
+	{
+		hanafuda.uiManager.clearAll();
+		if (hanafuda.uiManager.ownPoints > hanafuda.uiManager.enemyPoints)
+		{
+			hanafuda.uiManager.gameOverScreen.showScreen(true, hanafuda.uiManager.ownPoints);
+		}
+		else if (hanafuda.uiManager.ownPoints < hanafuda.uiManager.enemyPoints)
+		{
+			hanafuda.uiManager.gameOverScreen.showScreen(false, hanafuda.uiManager.ownPoints);
+		}
+		else
+		{
+			hanafuda.uiManager.gameOverScreen.showScreen(true, hanafuda.uiManager.ownPoints);
+		}
+	}
 	void changePoints(int points)
 	{
 		if (hanafuda.uiManager.ownID == hanafuda.uiManager.activePlayerId)
@@ -311,11 +434,15 @@ public partial class Lobby : Node2D
 	}
 	void startRound(int playerId)
 	{
+		hanafuda.uiManager.lastStartedId = playerId;
+		hanafuda.uiManager.outOfCards = 0;
+		hanafuda.uiManager.currTurn += 1;
 		hanafuda.uiManager.setActivePlayer(playerId);
 	}
 
 	void initGame(GameConfig config)
 	{
+		hanafuda.uiManager.rematchPressed = 0;
 		hanafuda.uiManager.maxTurn = config.maxTurns;
 		hanafuda.uiManager.ownPoints = config.startPoints;
 		hanafuda.uiManager.enemyPoints = config.startPoints;
@@ -331,42 +458,7 @@ public partial class Lobby : Node2D
 		}
 	}
 
-	Dictionary<Sets, List<Card>> calcCardsToSet(List<Card> cards, bool[] set)
-	{
-		var retDict = new Dictionary<Sets, List<Card>>();
-		var stringifiedSets = new string[] { "Plain,Scrolls,Animals,BlueScrolls,PoetryScrolls,InoShikaChou,Tsukimi,Hanami,Sankou,Ameshikou,Shikou,Gokou" };
-		var setToTypeMap = new Dictionary<Sets, Types[]>(){
-			{Sets.Plain,new Types[]{Types.Plain,Types.Sake}},
-			{Sets.Scrolls,new Types[]{Types.Scroll,Types.BlueScroll,Types.PoetryScroll}},
-			{Sets.Animals,new Types[]{Types.Animal,Types.Deer,Types.Boar,Types.Butterfly,Types.Sake}},
-			{Sets.BlueScrolls,new Types[]{Types.BlueScroll}},
-			{Sets.PoetryScrolls,new Types[]{Types.PoetryScroll}},
-			{Sets.InoShikaChou,new Types[]{Types.Deer,Types.Boar,Types.Butterfly}},
-			{Sets.Tsukimi,new Types[]{Types.Moon,Types.Sake}},
-			{Sets.Hanami,new Types[]{Types.CherryBlossom,Types.Sake}},
-			{Sets.Sankou,new Types[]{Types.Light,Types.Moon,Types.CherryBlossom}},
-			{Sets.Ameshikou,new Types[]{Types.Light,Types.Moon,Types.RainMan,Types.CherryBlossom}},
-			{Sets.Shikou,new Types[]{Types.Light,Types.Moon,Types.CherryBlossom}},
-			{Sets.Gokou,new Types[]{Types.Light,Types.Moon,Types.RainMan,Types.CherryBlossom}}
-		};
 
-		for (int i = 0; i < set.Length; i++)
-		{
-			if (set[i])
-			{
-				var list = new List<Card>();
-				cards.ForEach(x =>
-				{
-					if (setToTypeMap[(Sets)i].Contains(x.type))
-					{
-						list.Add(x);
-					}
-				});
-				retDict.Add((Sets)i, list);
-			}
-		}
-		return retDict;
-	}
 
 	Dictionary<Types, int> countCardTypes(List<Card> cards)
 	{
@@ -416,9 +508,20 @@ public partial class Lobby : Node2D
 		}
 		else
 		{
-			GD.Print("BEEVVY");
-			this.command(MessageType.SwitchPlayer, new byte[] { });
+			if (hanafuda.uiManager.activePlayer.handCards.cardScns.Count == 0)
+			{
+				this.command(MessageType.OutOfCards, new byte[] { });
+			}
+			else
+			{
+				this.command(MessageType.SwitchPlayer, new byte[] { });
+			}
 		}
+	}
+
+	void handleOutOfCards()
+	{
+		hanafuda.uiManager.outOfCards += 1;
 	}
 
 	public void todog()

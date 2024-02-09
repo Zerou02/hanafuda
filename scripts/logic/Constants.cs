@@ -13,8 +13,8 @@ public class Constants
                                                                 new Types[] { Types.Plain, Types.Scroll, Types.Animal, Types.RainMan },
                                                                 new Types[] { Types.Plain, Types.Plain, Types.Plain, Types.Light }};
 
-    public const int cardWidth = 30;
-    public const int cardHeight = 48;
+    public const int cardWidth = 40;
+    public const int cardHeight = 59;
     public const string inputManagerPath = "/root/InputManager";
     public const int serializedCardLength = 1;
 }

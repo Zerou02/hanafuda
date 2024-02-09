@@ -19,6 +19,19 @@ public class Deck
         shuffle();
     }
 
+    public static List<Card> OrderedCards()
+    {
+        var cards = new List<Card>();
+        for (int i = 0; i < 12; i++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
+                cards.Add(new Card(i, j));
+            }
+        }
+        return cards;
+    }
+
     public void shuffle()
     {
         var random = new Random();

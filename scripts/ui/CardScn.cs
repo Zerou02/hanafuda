@@ -34,7 +34,6 @@ public partial class CardScn : Node2D
 		setCard(new Card(0, 0));
 		area2D.MouseEntered += () => inputManager.mouseEnteredOnCard(this);
 		area2D.MouseExited += () => inputManager.mouseExitedOnCard(this);
-
 	}
 
 	public void setCard(Card card)

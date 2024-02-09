@@ -8,5 +8,5 @@ public enum MessageType
     InitGame, SetActivePlayer, InitDeck, MoveCard, MatchTableCard,
     MatchEmptyTableCard, StartDeckTurn, MatchTableCardWithDeck, SwitchPlayer, OpenDeckCard,
     DeckChoose, UiModeSetPlayerTurn, CheckHasSet, DisplayKoiKoiMenu, KoiKoiPressed, PeerConnected,
-    StartRound, RoundEnded, ChangePoints, GameEnded
+    StartRound, RoundEnded, ChangePoints, GameEnded, OutOfCards, SetEnemyName, BothLoaded, Quit, Rematch
 }

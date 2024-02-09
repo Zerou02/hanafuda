@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://tu0y40eftct8"]
+[gd_scene load_steps=8 format=3 uid="uid://tu0y40eftct8"]
 
 [ext_resource type="Script" path="res://scripts/ui/Hanafuda.cs" id="1_jel01"]
 [ext_resource type="PackedScene" uid="uid://wp0yy6sjr8id" path="res://scenes/UiManager.tscn" id="2_j4nvj"]
 [ext_resource type="PackedScene" uid="uid://bpnpkalgs0wrr" path="res://scenes/PlayerScn.tscn" id="2_xrwn3"]
 [ext_resource type="Script" path="res://minosGD/scripts/MouseRayCaster.cs" id="3_3y3bd"]
+[ext_resource type="PackedScene" uid="uid://6c5brndduth5" path="res://scenes/GameOverScreen.tscn" id="3_i4b6y"]
 [ext_resource type="PackedScene" uid="uid://brceuig5gsaon" path="res://scenes/DeckScn.tscn" id="3_pbd45"]
 [ext_resource type="PackedScene" uid="uid://cutfnu51c5ntw" path="res://scenes/TableCards.tscn" id="5_en43w"]
 
@@ -12,27 +13,58 @@ script = ExtResource("1_jel01")
 
 [node name="UiManager" parent="." instance=ExtResource("2_j4nvj")]
 
+[node name="UiRoot" parent="UiManager" index="0"]
+top_level = true
+
+[node name="KoiKoiSelection" parent="UiManager/UiRoot" index="2"]
+anchor_left = 0.15
+anchor_right = 0.75
+
+[node name="TurnCounter" parent="UiManager/UiRoot" index="3"]
+metadata/_edit_use_anchors_ = true
+
+[node name="ActiveTurnDisplay" parent="UiManager/UiRoot" index="4"]
+metadata/_edit_use_anchors_ = true
+
+[node name="SumBtn" parent="UiManager/UiRoot" index="7"]
+anchor_left = 0.005
+anchor_top = 0.011
+anchor_right = 0.066
+anchor_bottom = 0.097
+offset_left = 0.244999
+offset_top = -0.117001
+metadata/_edit_use_anchors_ = true
+
+[node name="GameOverScreen" parent="UiManager" instance=ExtResource("3_i4b6y")]
+visible = false
+
 [node name="EnemyPlayerMarker" type="Marker2D" parent="UiManager"]
-position = Vector2(104, 38)
+position = Vector2(400, 20)
 
 [node name="EnemyPlayer" parent="UiManager/EnemyPlayerMarker" instance=ExtResource("2_xrwn3")]
 
+[node name="OpenCards" parent="UiManager/EnemyPlayerMarker/EnemyPlayer" index="0"]
+position = Vector2(-100, 0)
+
 [node name="HandScn" parent="UiManager/EnemyPlayerMarker/EnemyPlayer" index="1"]
-position = Vector2(0, 111)
+position = Vector2(0, 90)
 
 [node name="OwnPlayerMarker" type="Marker2D" parent="UiManager"]
-position = Vector2(89, 426)
+position = Vector2(400, 390)
 
 [node name="OwnPlayer" parent="UiManager/OwnPlayerMarker" instance=ExtResource("2_xrwn3")]
 
+[node name="OpenCards" parent="UiManager/OwnPlayerMarker/OwnPlayer" index="0"]
+position = Vector2(-100, 0)
+
 [node name="HandScn" parent="UiManager/OwnPlayerMarker/OwnPlayer" index="1"]
-position = Vector2(3, 122)
+position = Vector2(0, 70)
 
 [node name="DeckScn" parent="UiManager" instance=ExtResource("3_pbd45")]
-position = Vector2(40, 246)
+position = Vector2(300, 250)
 
 [node name="TableCards" parent="UiManager" instance=ExtResource("5_en43w")]
-position = Vector2(135, 230)
+position = Vector2(430, 210)
 
 [node name="MouseRayCaster" type="RayCast2D" parent="."]
 target_position = Vector2(0, 0)
@@ -40,5 +72,6 @@ hit_from_inside = true
 collide_with_areas = true
 script = ExtResource("3_3y3bd")
 
+[editable path="UiManager"]
 [editable path="UiManager/EnemyPlayerMarker/EnemyPlayer"]
 [editable path="UiManager/OwnPlayerMarker/OwnPlayer"]

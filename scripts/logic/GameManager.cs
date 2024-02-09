@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Linq;
 using Godot;
 
 public class GameManager
@@ -79,11 +79,9 @@ public class GameManager
     {
         if (deckCard == null) { return; }
         var matches = matchTableCards(deckCard, tableCards);
-        GD.Print("MATCHES", matches.Count);
         if (matches.Count == 0)
         {
             var invalidIdx = findFirstInvalidIdx(tableCards);
-            GD.Print(invalidIdx);
             server.command(MessageType.MoveCard, Serializer.serializeCardMove(CardPosition.Deck, 0, CardPosition.TableCard, invalidIdx));
             server.command(MessageType.UiModeSetPlayerTurn, new byte[] { });
             server.command(MessageType.CheckHasSet, new byte[] { });
@@ -161,5 +159,42 @@ public class GameManager
             pointArr[i] *= amountKoiKois;
         }
         return pointArr;
+    }
+
+    public static Dictionary<Sets, List<Card>> calcCardsToSet(List<Card> cards, bool[] set)
+    {
+        var retDict = new Dictionary<Sets, List<Card>>();
+        var stringifiedSets = new string[] { "Plain,Scrolls,Animals,BlueScrolls,PoetryScrolls,InoShikaChou,Tsukimi,Hanami,Sankou,Ameshikou,Shikou,Gokou" };
+        var setToTypeMap = new Dictionary<Sets, Types[]>(){
+            {Sets.Plain,new Types[]{Types.Plain,Types.Sake}},
+            {Sets.Scrolls,new Types[]{Types.Scroll,Types.BlueScroll,Types.PoetryScroll}},
+            {Sets.Animals,new Types[]{Types.Animal,Types.Deer,Types.Boar,Types.Butterfly,Types.Sake}},
+            {Sets.BlueScrolls,new Types[]{Types.BlueScroll}},
+            {Sets.PoetryScrolls,new Types[]{Types.PoetryScroll}},
+            {Sets.InoShikaChou,new Types[]{Types.Deer,Types.Boar,Types.Butterfly}},
+            {Sets.Tsukimi,new Types[]{Types.Moon,Types.Sake}},
+            {Sets.Hanami,new Types[]{Types.CherryBlossom,Types.Sake}},
+            {Sets.Sankou,new Types[]{Types.Light,Types.Moon,Types.CherryBlossom}},
+            {Sets.Ameshikou,new Types[]{Types.Light,Types.Moon,Types.RainMan,Types.CherryBlossom}},
+            {Sets.Shikou,new Types[]{Types.Light,Types.Moon,Types.CherryBlossom}},
+            {Sets.Gokou,new Types[]{Types.Light,Types.Moon,Types.RainMan,Types.CherryBlossom}}
+        };
+
+        for (int i = 0; i < set.Length; i++)
+        {
+            if (set[i])
+            {
+                var list = new List<Card>();
+                cards.ForEach(x =>
+                {
+                    if (setToTypeMap[(Sets)i].Contains(x.type))
+                    {
+                        list.Add(x);
+                    }
+                });
+                retDict.Add((Sets)i, list);
+            }
+        }
+        return retDict;
     }
 }

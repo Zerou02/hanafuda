@@ -1,0 +1,70 @@
+[gd_scene load_steps=2 format=3 uid="uid://bqbspwwkvq53"]
+
+[ext_resource type="Script" path="res://scripts/ui/ConnectionMenu.cs" id="1_bcrqn"]
+
+[node name="ConnectionMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_bcrqn")
+
+[node name="Host" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.4
+anchor_top = 0.3
+anchor_right = 0.6
+anchor_bottom = 0.45
+text = "HOST
+"
+metadata/_edit_use_anchors_ = true
+
+[node name="Connect" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.4
+anchor_top = 0.5
+anchor_right = 0.6
+anchor_bottom = 0.65
+text = "VERBINDE"
+metadata/_edit_use_anchors_ = true
+
+[node name="ServerAddr" type="LineEdit" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.249
+anchor_top = 0.219
+anchor_right = 0.439
+anchor_bottom = 0.278
+offset_top = 0.0879974
+offset_bottom = -0.144012
+text = "127.0.0.1:8080"
+placeholder_text = "IpAddr:Port"
+
+[node name="Label" type="Label" parent="ServerAddr"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = -1.11
+anchor_right = 1.0
+text = "Serveradresse"
+
+[node name="PlayerName" type="LineEdit" parent="."]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.485
+anchor_top = 0.215
+anchor_right = 0.694
+anchor_bottom = 0.276
+offset_top = -0.320007
+offset_bottom = 0.151978
+placeholder_text = "Dein Spielername"
+
+[node name="Label" type="Label" parent="PlayerName"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = -1.11
+anchor_right = 1.0
+text = "Dein Spielername"

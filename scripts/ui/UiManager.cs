@@ -16,8 +16,8 @@ public partial class UiManager : Node2D
 
     public int ownPoints = 30;
     public int enemyPoints = 30;
-    public int currTurn = 1;
-    public int maxTurn = 3;
+    public int currTurn = 0;
+    public int maxTurn = 1;
     PackedScene cardScn = GD.Load<PackedScene>("scenes/Card.tscn");
     InputManager inputManager;
     public Lobby server;
@@ -29,7 +29,18 @@ public partial class UiManager : Node2D
     Control uiRoot;
     Marker2D ownMarker;
     Marker2D enemyMarker;
+    public Control loadingScreen;
     public Dictionary<Sets, List<Card>>? lastSet = null;
+    public int outOfCards = 0;
+    public int lastStartedId = 0;
+    Label ownName;
+    Label enemyName;
+    public string playerName = "";
+    public string enemyPlayerName = "";
+
+    public int rematchPressed = 0;
+    public GameOverScreen gameOverScreen;
+
     public override void _Ready()
     {
         inputManager = GetNode<InputManager>(Constants.inputManagerPath);
@@ -39,32 +50,41 @@ public partial class UiManager : Node2D
         turnCounter = GetNode<Label>("UiRoot/TurnCounter");
         ownPointsLabel = GetNode<Label>("UiRoot/OwnPoints");
         enemyPointsLabel = GetNode<Label>("UiRoot/EnemyPoints");
+        loadingScreen = GetNode<Control>("UiRoot/LoadingScreen");
+        ownName = GetNode<Label>("UiRoot/OwnName");
+        enemyName = GetNode<Label>("UiRoot/EnemyName");
 
         deck = GetNode<DeckScn>("DeckScn");
         tableCards = GetNode<TableCards>("TableCards");
         ownMarker = GetNode<Marker2D>("OwnPlayerMarker");
         enemyMarker = GetNode<Marker2D>("EnemyPlayerMarker");
+        gameOverScreen = GetNode<GameOverScreen>("GameOverScreen");
 
         players[0] = GetNode<PlayerScn>("EnemyPlayerMarker/EnemyPlayer");
         players[1] = GetNode<PlayerScn>("OwnPlayerMarker/OwnPlayer");
         inputManager.uiManager = this;
+        koiKoiSelection.Visible = false;
         koiKoiSelection.koiKoiPressed += () => handleKoiKoiPressed();
         koiKoiSelection.stopPressed += () => handleStop();
-        var example = new Dictionary<Sets, List<Card>>() { { Sets.Tsukimi, new List<Card>() { new Card(2, 0), new Card(2, 2) } }, { Sets.Hanami, new List<Card>() { new Card(3, 0), new Card(3, 2) } }, { Sets.Plain, new List<Card>() { new Card(4, 0), new Card(5, 0) } } };
-        lastSet = example;
-        GD.Print(isNewKoiKoi(example));
+        //var example = new Dictionary<Sets, List<Card>>() { { Sets.Tsukimi, new List<Card>() { new Card(2, 0), new Card(2, 2) } }, { Sets.Hanami, new List<Card>() { new Card(3, 0), new Card(3, 2) } }, { Sets.Plain, new List<Card>() { new Card(4, 0), new Card(5, 0) } } };
+        loadingScreen.Visible = true;
+        gameOverScreen.QuitClicked += () => server.command(MessageType.Quit, new byte[] { });
+        gameOverScreen.RematchClicked += () => server.command(MessageType.Rematch, new byte[] { });
     }
 
     public override void _Process(double delta)
     {
-        turnCounter.Text = currTurn.ToString() + " / " + maxTurn.ToString();
-        ownPointsLabel.Text = ownPoints.ToString();
-        enemyPointsLabel.Text = enemyPoints.ToString();
-        activeTurnDisplay.Text = ownID == activePlayerId ? "Your Turn" : "Enemy Turn";
+        turnCounter.Text = "Runde: " + currTurn.ToString() + " / " + maxTurn.ToString();
+        ownPointsLabel.Text = "                  " + ownPoints.ToString();
+        enemyPointsLabel.Text = "                  " + enemyPoints.ToString();
+        activeTurnDisplay.Text = ownID == activePlayerId ? "Du bist am Zug" : "Der Gegner ist am Zug";
+        ownName.Text = playerName;
+        enemyName.Text = enemyPlayerName;
     }
 
     public void setActivePlayer(int activeId)
     {
+        uiMode = UiModes.PlayerTurn;
         foreach (var x in players)
         {
             x.setActive(false);
@@ -78,6 +98,7 @@ public partial class UiManager : Node2D
 
     public void clearAll()
     {
+        lastSet = null;
         tableCards.cardScns = Utils.clearCardsScns(tableCards.cardScns);
         deck.cards = Utils.clearCardsScns(deck.cards);
         foreach (var x in players)
@@ -149,19 +170,6 @@ public partial class UiManager : Node2D
             }
         }
         tableCards.highlightCards(highlightList);
-    }
-    public void startRound(int playerId)
-    {
-        foreach (var x in players)
-        {
-            x.setActive(false);
-        }
-        activePlayer = players[playerId];
-        activePlayer.setActive(true);
-        activePlayer.handCards.cardScns.ForEach(x =>
-        {
-            x.setAllowInteraction(true);
-        });
     }
 
     void highlightHandCards()
@@ -249,12 +257,18 @@ public partial class UiManager : Node2D
         {
             Utils.reparentTo(players[0], ownMarker);
             Utils.reparentTo(players[1], enemyMarker);
+            players[0].handCards.Position = new Vector2(0, 70);
+            players[1].handCards.Position = new Vector2(0, 90);
+
             players[1].toggleIsEnemy();
         }
         else
         {
             Utils.reparentTo(players[1], ownMarker);
             Utils.reparentTo(players[0], enemyMarker);
+            players[1].handCards.Position = new Vector2(0, 70);
+            players[0].handCards.Position = new Vector2(0, 90);
+
             players[0].toggleIsEnemy();
         }
         players[0].Position = new Vector2(0, 0);
@@ -286,13 +300,13 @@ public partial class UiManager : Node2D
     public bool isNewKoiKoi(Dictionary<Sets, List<Card>> toCheck)
     {
         if (lastSet == null || lastSet.Count != toCheck.Count) { return true; }
-        var retVal = true;
+        var retVal = false;
         foreach (var x in lastSet)
         {
             if (x.Key == Sets.Plain || x.Key == Sets.Scrolls || x.Key == Sets.Animals) { continue; }
-            if (Utils.cardListsSame(x.Value, toCheck[x.Key]))
+            if (!Utils.cardListsSame(x.Value, toCheck[x.Key]))
             {
-                retVal = false;
+                retVal = true;
                 break;
             }
         }
@@ -301,13 +315,21 @@ public partial class UiManager : Node2D
 
     public void displayKoiKoiMenu(Dictionary<Sets, List<Card>> cards)
     {
+        var isEmpty = activePlayer.handCards.cardScns.Count == 0;
         if (!isNewKoiKoi(cards))
         {
-            server.command(MessageType.SwitchPlayer, new byte[] { });
+            if (isEmpty)
+            {
+                server.command(MessageType.OutOfCards, new byte[] { });
+            }
+            else
+            {
+                server.command(MessageType.SwitchPlayer, new byte[] { });
+            }
             return;
         }
+        koiKoiSelection.koiKoiButton.Visible = !isEmpty;
         lastSet = cards;
-        Utils.printDictList(cards);
         koiKoiSelection.setCards(cards, amountKoiKois);
         koiKoiSelection.MoveToFront();
         uiMode = UiModes.UiTurn;

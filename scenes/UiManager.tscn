@@ -1,8 +1,20 @@
-[gd_scene load_steps=4 format=3 uid="uid://wp0yy6sjr8id"]
+[gd_scene load_steps=10 format=3 uid="uid://wp0yy6sjr8id"]
 
 [ext_resource type="Script" path="res://scripts/ui/UiManager.cs" id="1_pdavx"]
 [ext_resource type="PackedScene" uid="uid://do3k6c7gywl1y" path="res://scenes/KoiKoiSelection.tscn" id="2_sco44"]
 [ext_resource type="Script" path="res://scripts/ui/UiRoot.cs" id="2_x62xs"]
+[ext_resource type="Texture2D" uid="uid://d0nqkv7o3gbla" path="res://assets/actual_coin.png" id="4_443qk"]
+[ext_resource type="PackedScene" uid="uid://cd82d6u6eiitb" path="res://scenes/LoadingScreen.tscn" id="5_6cmtg"]
+[ext_resource type="Texture2D" uid="uid://eu4voki2nov0" path="res://assets/information.png" id="6_f6cad"]
+[ext_resource type="PackedScene" uid="uid://vj5e1t8if710" path="res://scenes/CardSummary.tscn" id="6_lejbe"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_cweyj"]
+font_size = 24
+font_color = Color(1, 1, 0.129412, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_teqfv"]
+font_size = 24
+font_color = Color(1, 1, 0.129412, 1)
 
 [node name="UiManager" type="Node2D"]
 script = ExtResource("1_pdavx")
@@ -15,12 +27,33 @@ offset_bottom = 647.0
 mouse_filter = 2
 script = ExtResource("2_x62xs")
 
+[node name="OwnName" type="Label" parent="UiRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.126
+anchor_top = 0.673
+anchor_right = 0.263
+anchor_bottom = 0.739
+text = "Name"
+metadata/_edit_use_anchors_ = true
+
+[node name="EnemyName" type="Label" parent="UiRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.126
+anchor_top = 0.075
+anchor_right = 0.263
+anchor_bottom = 0.159
+text = "Gegnername"
+metadata/_edit_use_anchors_ = true
+
 [node name="KoiKoiSelection" parent="UiRoot" instance=ExtResource("2_sco44")]
 layout_mode = 1
-anchor_left = 0.323
-anchor_top = 0.19
-anchor_right = 0.605
-anchor_bottom = 0.777
+anchor_left = 0.25
+anchor_top = 0.05
+anchor_right = 0.65
+anchor_bottom = 0.95
+metadata/_edit_use_anchors_ = true
 
 [node name="TurnCounter" type="Label" parent="UiRoot"]
 layout_mode = 1
@@ -50,6 +83,21 @@ anchor_bottom = 0.724
 offset_left = 0.541992
 offset_right = 0.381958
 text = "Punkte: X"
+label_settings = SubResource("LabelSettings_cweyj")
+metadata/_edit_use_anchors_ = true
+
+[node name="ActualCoin2" type="TextureRect" parent="UiRoot/OwnPoints"]
+layout_mode = 1
+anchors_preset = -1
+anchor_top = -0.301
+anchor_right = 0.375
+anchor_bottom = 0.942
+offset_top = 0.0126896
+offset_right = 3.8147e-05
+offset_bottom = 0.0244026
+texture = ExtResource("4_443qk")
+expand_mode = 1
+metadata/_edit_use_anchors_ = true
 
 [node name="EnemyPoints" type="Label" parent="UiRoot"]
 layout_mode = 1
@@ -60,4 +108,33 @@ anchor_right = 0.918
 anchor_bottom = 0.2
 offset_left = 0.541992
 offset_right = 0.381958
-text = "Punkte: X"
+text = "                  X"
+label_settings = SubResource("LabelSettings_teqfv")
+vertical_alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="ActualCoin" type="TextureRect" parent="UiRoot/EnemyPoints"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.391
+anchor_bottom = 0.952
+offset_right = 0.0560455
+offset_bottom = 0.0069809
+texture = ExtResource("4_443qk")
+expand_mode = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="SumBtn" type="TextureButton" parent="UiRoot"]
+layout_mode = 1
+anchors_preset = -1
+anchor_right = 0.03
+anchor_bottom = 0.054
+texture_normal = ExtResource("6_f6cad")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="LoadingScreen" parent="UiRoot" instance=ExtResource("5_6cmtg")]
+visible = false
+layout_mode = 1
+
+[node name="CardSummary" parent="UiRoot" instance=ExtResource("6_lejbe")]
