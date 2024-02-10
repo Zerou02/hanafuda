@@ -16,5 +16,7 @@ public class Constants
     public const int cardWidth = 40;
     public const int cardHeight = 59;
     public const string inputManagerPath = "/root/InputManager";
+    public const string animationManagerPath = "/root/AnimationManager";
+
     public const int serializedCardLength = 1;
 }

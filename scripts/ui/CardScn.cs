@@ -14,6 +14,8 @@ public partial class CardScn : Node2D
 	public bool isSelected = false;
 	public bool isOpen = true;
 	public bool allowSelectable = true;
+	bool inAnimation = false;
+	bool shouldFree = false;
 
 	[Signal]
 	public delegate void pressedEventHandler(CardScn card);
@@ -67,6 +69,10 @@ public partial class CardScn : Node2D
 
 	public override void _Process(double delta)
 	{
+		if (shouldFree && !inAnimation)
+		{
+			QueueFree();
+		}
 		setImage();
 		this.selectTexture.Visible = this.isSelected;
 	}
@@ -155,5 +161,21 @@ public partial class CardScn : Node2D
 	{
 		var baseSize = this.sprite2D.GetScaledRect().Size;
 		this.Scale = size / baseSize;
+	}
+
+	public void setQueueFree()
+	{
+		shouldFree = true;
+	}
+
+	public void animateMove(Vector2 to, float duration)
+	{
+		if (this.shouldFree) { return; }
+		inAnimation = true;
+		{
+			var tween = GetTree().CreateTween().SetParallel();
+			tween.TweenProperty(this, "position", to, duration);
+			tween.Finished += () => { inAnimation = false; };
+		}
 	}
 }

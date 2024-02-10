@@ -1,5 +1,6 @@
 using Godot;
 using System.Collections.Generic;
+using System.Threading;
 
 public enum UiModes { PlayerTurn, DeckTurn, UiTurn };
 public partial class UiManager : Node2D
@@ -25,7 +26,7 @@ public partial class UiManager : Node2D
     public Label turnCounter;
     public Label ownPointsLabel;
     public Label enemyPointsLabel;
-    KoiKoiSelection koiKoiSelection;
+    public KoiKoiSelection koiKoiSelection;
     Control uiRoot;
     Marker2D ownMarker;
     Marker2D enemyMarker;
@@ -40,6 +41,7 @@ public partial class UiManager : Node2D
 
     public int rematchPressed = 0;
     public GameOverScreen gameOverScreen;
+    AnimationManager animationManager;
 
     public override void _Ready()
     {
@@ -69,7 +71,9 @@ public partial class UiManager : Node2D
         //var example = new Dictionary<Sets, List<Card>>() { { Sets.Tsukimi, new List<Card>() { new Card(2, 0), new Card(2, 2) } }, { Sets.Hanami, new List<Card>() { new Card(3, 0), new Card(3, 2) } }, { Sets.Plain, new List<Card>() { new Card(4, 0), new Card(5, 0) } } };
         loadingScreen.Visible = true;
         gameOverScreen.QuitClicked += () => server.command(MessageType.Quit, new byte[] { });
-        gameOverScreen.RematchClicked += () => server.command(MessageType.Rematch, new byte[] { });
+        gameOverScreen.RematchClicked += () => { server.command(MessageType.Rematch, new byte[] { }); gameOverScreen.textButton.Text = "Warte auf Antwort..."; gameOverScreen.textButton.Disabled = true; };
+        animationManager = GetNode<AnimationManager>(Constants.animationManagerPath);
+        animationManager.uiManager = this;
     }
 
     public override void _Process(double delta)
@@ -191,9 +195,10 @@ public partial class UiManager : Node2D
 
         }
     }
-    public void setOpenCardVis(bool val)
+    public async void setOpenCardVis(bool val)
     {
         deck.setOpenCardVisibility(val);
+        animationManager.addAnimation(new OpenDeckAnimation());
     }
 
     public void addToEmptyTableCard(CardScn handCard, int idx)
@@ -313,7 +318,7 @@ public partial class UiManager : Node2D
         return retVal;
     }
 
-    public void displayKoiKoiMenu(Dictionary<Sets, List<Card>> cards)
+    public void displayKoiKoiMenu(Dictionary<Sets, List<Card>> cards, bool hasChoice)
     {
         var isEmpty = activePlayer.handCards.cardScns.Count == 0;
         if (!isNewKoiKoi(cards))
@@ -328,13 +333,24 @@ public partial class UiManager : Node2D
             }
             return;
         }
-        koiKoiSelection.koiKoiButton.Visible = !isEmpty;
         lastSet = cards;
-        koiKoiSelection.setCards(cards, amountKoiKois);
+        var bytes = new bool[12];
+        foreach (var x in cards.Keys)
+        {
+            bytes[(int)x] = true;
+        }
+        server.command(MessageType.DisplayKoiKoiScreen, Serializer.serializeSet(bytes));
+
+    }
+
+    public void displayKoiKoiScreen(Dictionary<Sets, List<Card>> cards, bool hasChoice)
+    {
+        var isEmpty = activePlayer.handCards.cardScns.Count == 0;
+        koiKoiSelection.setCards(cards, amountKoiKois, hasChoice);
+        koiKoiSelection.koiKoiButton.Visible = !isEmpty && hasChoice;
         koiKoiSelection.MoveToFront();
         uiMode = UiModes.UiTurn;
     }
-
     public void handleKoiKoiPressed()
     {
         server.command(MessageType.KoiKoiPressed, new byte[] { });
@@ -349,6 +365,7 @@ public partial class UiManager : Node2D
     }
     public void handlerServerKoiKoiPressed()
     {
+        koiKoiSelection.Visible = false;
         this.amountKoiKois += 1;
     }
 

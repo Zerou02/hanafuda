@@ -92,7 +92,7 @@ public class Utils
     {
         foreach (var x in cardScns)
         {
-            x.QueueFree();
+            x.setQueueFree();
         }
         return new List<CardScn>();
     }

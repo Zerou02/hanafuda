@@ -75,10 +75,11 @@ public class GameManager
     }
 
 
-    public static void startDeckTurn(Lobby server, Card deckCard, List<Card> tableCards)
+    public static async void startDeckTurn(Lobby server, Card deckCard, List<Card> tableCards)
     {
         if (deckCard == null) { return; }
         var matches = matchTableCards(deckCard, tableCards);
+        server.command(MessageType.OpenDeckCard, new byte[] { });
         if (matches.Count == 0)
         {
             var invalidIdx = findFirstInvalidIdx(tableCards);
@@ -94,11 +95,9 @@ public class GameManager
         }
         else
         {
-            server.command(MessageType.OpenDeckCard, new byte[] { });
             server.command(MessageType.DeckChoose, new byte[] { });
         }
     }
-
     public static int calculateTotalPoints(Dictionary<Sets, List<Card>> set, int amountKoiKois)
     {
         var points = calculatePointsArr(set, amountKoiKois);

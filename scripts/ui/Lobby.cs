@@ -12,6 +12,7 @@ public partial class Lobby : Control
 	ENetMultiplayerPeer peer;
 	ConnectionMenu connectionMenu;
 	TextureRect bgTex;
+	AnimationManager animationManager;
 	bool isHost;
 	public override void _Ready()
 	{
@@ -20,6 +21,7 @@ public partial class Lobby : Control
 		GD.Print(connectionMenu);
 		connectionMenu.connectPressed += (addr, name) => createPeer(addr, name);
 		connectionMenu.hostPressed += (addr, name) => createHost(addr, name);
+		animationManager = GetNode<AnimationManager>(Constants.animationManagerPath);
 	}
 
 	void createPeer(string addr, string name)
@@ -178,7 +180,7 @@ public partial class Lobby : Control
 		}
 		else if (type == MessageType.PeerConnected)
 		{
-			command(MessageType.InitGame, Serializer.serializeGameConfig(0, 1, 30));
+			command(MessageType.InitGame, Serializer.serializeGameConfig(0, 3, 30));
 		}
 		else if (type == MessageType.InitGame)
 		{
@@ -220,10 +222,15 @@ public partial class Lobby : Control
 		else if (type == MessageType.Rematch)
 		{
 			hanafuda.uiManager.rematchPressed += 1;
-			if (hanafuda.uiManager.rematchPressed == 2)
-			{
-				rematch();
-			}
+		}
+		else if (type == MessageType.HideRematchScreen)
+		{
+			handleHideRematchScreen();
+		}
+		else if (type == MessageType.DisplayKoiKoiScreen)
+		{
+			var set = Serializer.deserializeSet(bytes);
+			hanafuda.uiManager.displayKoiKoiScreen(GameManager.calcCardsToSet(getOpenCards(), set), false);
 		}
 	}
 
@@ -272,8 +279,8 @@ public partial class Lobby : Control
 		}
 		else if (type == MessageType.OpenDeckCard)
 		{
-			hanafuda.uiManager.setOpenCardVis(true);
 			Rpc("sendMessage", (int)type, bytes);
+			hanafuda.uiManager.setOpenCardVis(true);
 		}
 		else if (type == MessageType.DeckChoose)
 		{
@@ -292,7 +299,7 @@ public partial class Lobby : Control
 		else if (type == MessageType.DisplayKoiKoiMenu)
 		{
 			var set = Serializer.deserializeSet(bytes);
-			hanafuda.uiManager.displayKoiKoiMenu(GameManager.calcCardsToSet(getOpenCards(), set));
+			hanafuda.uiManager.displayKoiKoiMenu(GameManager.calcCardsToSet(getOpenCards(), set), true);
 		}
 		else if (type == MessageType.KoiKoiPressed)
 		{
@@ -370,16 +377,35 @@ public partial class Lobby : Control
 			if (hanafuda.uiManager.rematchPressed == 2)
 			{
 				rematch();
+				command(MessageType.HideRematchScreen, new byte[] { });
 				command(MessageType.RoundEnded, new byte[] { 0 });
 			}
 			Rpc("sendMessage", (int)type, bytes);
 		}
+		else if (type == MessageType.HideRematchScreen)
+		{
+			handleHideRematchScreen();
+			Rpc("sendMessage", (int)type, bytes);
+		}
+		else if (type == MessageType.DisplayKoiKoiScreen)
+		{
+			var set = Serializer.deserializeSet(bytes);
+			hanafuda.uiManager.displayKoiKoiScreen(GameManager.calcCardsToSet(getOpenCards(), set), true);
+			Rpc("sendMessage", (int)type, bytes);
+		}
+	}
+
+	void handleHideRematchScreen()
+	{
+		rematch();
+		hanafuda.uiManager.gameOverScreen.Visible = false;
 	}
 
 	void rematch()
 	{
+		hanafuda.uiManager.amountKoiKois = 1;
 		hanafuda.uiManager.rematchPressed = 0;
-		hanafuda.uiManager.currTurn = 1;
+		hanafuda.uiManager.currTurn = 0;
 		hanafuda.uiManager.ownPoints = 30;
 		hanafuda.uiManager.enemyPoints = 30;
 	}
@@ -387,7 +413,12 @@ public partial class Lobby : Control
 	{
 		hanafuda.QueueFree();
 		hanafuda = null;
+		if (isHost && peer != null)
+		{
+			peer.DisconnectPeer(1);
+		}
 		isHost = false;
+		bgTex.Texture = ResourceLoader.Load<CompressedTexture2D>("res://assets/town.png");
 		peer = null;
 		connectionMenu.serverAddr.Text = "127.0.0.1:8080";
 		connectionMenu.playerName.Text = "";
@@ -421,6 +452,7 @@ public partial class Lobby : Control
 	}
 	void changePoints(int points)
 	{
+		hanafuda.uiManager.koiKoiSelection.Visible = false;
 		if (hanafuda.uiManager.ownID == hanafuda.uiManager.activePlayerId)
 		{
 			hanafuda.uiManager.ownPoints += points;
@@ -482,10 +514,10 @@ public partial class Lobby : Control
 		fillEntry(set, cardCount[Types.Deer] + cardCount[Types.Boar] + cardCount[Types.Butterfly] == 3, Sets.PoetryScrolls);
 		fillEntry(set, cardCount[Types.Moon] + cardCount[Types.Sake] == 2, Sets.Tsukimi);
 		fillEntry(set, cardCount[Types.CherryBlossom] + cardCount[Types.Sake] == 2, Sets.Hanami);
-		fillEntry(set, cardCount[Types.Light] + cardCount[Types.Moon] == 3, Sets.Sankou);
-		fillEntry(set, cardCount[Types.Light] + cardCount[Types.Moon] == 4, Sets.Shikou);
-		fillEntry(set, cardCount[Types.Light] + cardCount[Types.RainMan] + cardCount[Types.Moon] == 5, Sets.Gokou);
-		fillEntry(set, cardCount[Types.Light] + cardCount[Types.RainMan] + cardCount[Types.Moon] == 4, Sets.Ameshikou);
+		fillEntry(set, cardCount[Types.CherryBlossom] + cardCount[Types.Light] + cardCount[Types.Moon] == 3, Sets.Sankou);
+		fillEntry(set, cardCount[Types.CherryBlossom] + cardCount[Types.Light] + cardCount[Types.Moon] == 4, Sets.Shikou);
+		fillEntry(set, cardCount[Types.CherryBlossom] + cardCount[Types.Light] + cardCount[Types.RainMan] + cardCount[Types.Moon] == 5, Sets.Gokou);
+		fillEntry(set, cardCount[Types.CherryBlossom] + cardCount[Types.Light] + cardCount[Types.RainMan] + cardCount[Types.Moon] == 4, Sets.Ameshikou);
 	}
 
 	bool[] calcSet()

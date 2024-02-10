@@ -4,14 +4,17 @@ public partial class InputManager : Node
 {
 	public UiManager uiManager;
 	CardScn? selectedCard;
-	public void init(UiManager uiManager)
+	AnimationManager animationManager;
+
+	public override void _Ready()
 	{
-		this.uiManager = uiManager;
+		animationManager = GetNode<AnimationManager>(Constants.animationManagerPath);
 	}
 
 	public void handCardSelected(CardScn cardScn)
 	{
-		if (uiManager.uiMode != UiModes.PlayerTurn) { return; }
+		GD.Print("aa", animationManager);
+		if (uiManager.uiMode != UiModes.PlayerTurn || animationManager.isInAnimation) { return; }
 		selectedCard = cardScn;
 		uiManager.selectHandCard(cardScn);
 		uiManager.highlightTableCards(cardScn);
@@ -19,7 +22,7 @@ public partial class InputManager : Node
 
 	public void emptyTableCardPressed(int idx)
 	{
-		if (selectedCard == null) { return; }
+		if (selectedCard == null || animationManager.isInAnimation) { return; }
 		var cardBytes = Card.serialize(selectedCard.card);
 		var bytes = new byte[Constants.serializedCardLength + 1];
 		cardBytes.CopyTo(bytes, 0);
@@ -33,7 +36,7 @@ public partial class InputManager : Node
 
 	public void flowerTableCardPressed(CardScn cardScn)
 	{
-		if (!cardScn.card.isValid()) { return; }
+		if (!cardScn.card.isValid() || animationManager.isInAnimation) { return; }
 		if (uiManager.uiMode == UiModes.DeckTurn)
 		{
 			var card = uiManager.deck.cards[0].card.clone();
@@ -70,7 +73,8 @@ public partial class InputManager : Node
 
 	public void cardPressed(CardScn cardScn)
 	{
-		if (uiManager.ownID != uiManager.activePlayerId) { return; }
+		GD.Print(animationManager);
+		if (uiManager.ownID != uiManager.activePlayerId || animationManager.isInAnimation) { return; }
 		if (cardScn.type == CardType.Hand && uiManager.belongsToActivePlayer(cardScn))
 		{
 			handCardSelected(cardScn);

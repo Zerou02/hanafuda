@@ -6,10 +6,7 @@ public partial class Hanafuda : Node2D
 	{
 		uiManager = GetNode<UiManager>("UiManager");
 	}
-
 	public override void _Process(double delta)
 	{
 	}
-
-
 }

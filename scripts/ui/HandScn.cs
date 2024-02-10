@@ -6,10 +6,13 @@ public partial class HandScn : Node2D
     public List<CardScn> cardScns = new List<CardScn>();
     public Rect2 bounds = new Rect2(0, 0, 800, 200);
     InputManager inputManager;
+    AnimationManager animationManager;
 
     public override void _Ready()
     {
         inputManager = GetNode<InputManager>(Constants.inputManagerPath);
+        animationManager = GetNode<AnimationManager>(Constants.animationManagerPath);
+
     }
 
     public override void _Process(double delta)
@@ -19,7 +22,7 @@ public partial class HandScn : Node2D
     public void removeCard(CardScn cardScn)
     {
         this.cardScns = Utils.removeCardScn(cardScns, cardScn);
-        Flexbox.alignLeft(bounds, this.cardScns);
+        Flexbox.alignLeftAnimated(bounds, this.cardScns, animationManager);
     }
     public void setCardScns(List<CardScn> cardScns)
     {
@@ -41,7 +44,7 @@ public partial class HandScn : Node2D
         Utils.reparentTo(cardScn, this);
         this.cardScns.Add(cardScn);
         cardScn.setCard(cardScn.card);
-        Flexbox.alignLeft(bounds, this.cardScns);
+        Flexbox.alignLeftAnimated(bounds, this.cardScns, animationManager);
     }
 
     public void setPos(Vector2 pos)

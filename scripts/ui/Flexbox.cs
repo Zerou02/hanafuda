@@ -19,6 +19,22 @@ public class Flexbox
 		}
 	}
 
+	public static void alignLeftAnimated(Rect2 bounds, List<CardScn> cardScns, AnimationManager animationManager)
+	{
+		if (cardScns.Count == 0) { return; }
+		var cardSize = cardScns[0].getBounds().Size;
+		var width = cardSize.X;
+		if (bounds.Size.X < cardSize.X * cardScns.Count)
+		{
+			width = (bounds.Size.X - cardSize.X) / (cardScns.Count - 1);
+		}
+		for (int i = 0; i < cardScns.Count; i++)
+		{
+			var child = cardScns[i];
+			animationManager.addAnimation(new MoveCardAnimation(child, new Vector2(bounds.Position.X + i * width, bounds.Position.Y)));
+			//child.Position = new Vector2(bounds.Position.X + i * width, bounds.Position.Y);
+		}
+	}
 	/// <summary>
 	/// Deprecated
 	/// </summary>

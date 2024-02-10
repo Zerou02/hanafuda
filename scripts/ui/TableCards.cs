@@ -8,10 +8,13 @@ public partial class TableCards : Node2D
 
 	PackedScene cardScn = GD.Load<PackedScene>("scenes/Card.tscn");
 	InputManager inputManager;
+	AnimationManager animationManager;
 
 	public override void _Ready()
 	{
 		inputManager = GetNode<InputManager>(Constants.inputManagerPath);
+		animationManager = GetNode<AnimationManager>(Constants.animationManagerPath);
+
 	}
 	public override void _Process(double delta)
 	{
@@ -28,7 +31,7 @@ public partial class TableCards : Node2D
 			{
 				row.Add(cardScns[cardsPerRow * i + j]);
 			}
-			Flexbox.alignLeft(new Rect2(0, i * 100, 800, 100), row);
+			Flexbox.alignLeftAnimated(new Rect2(0, i * 100, 800, 100), row, animationManager);
 		}
 	}
 
@@ -87,7 +90,7 @@ public partial class TableCards : Node2D
 			{
 				if (!cardScns[i].card.isValid())
 				{
-					cardScns[i].QueueFree();
+					cardScns[i].setQueueFree();
 					cardScns[i] = cardScn;
 					found = true;
 					break;
@@ -164,7 +167,7 @@ public partial class TableCards : Node2D
 	{
 		Utils.reparentTo(cardScn, this);
 		cardScn.pressed += (x) => inputManager.flowerTableCardPressed(x);
-		this.cardScns[idx].QueueFree();
+		this.cardScns[idx].setQueueFree();
 		this.cardScns[idx] = cardScn;
 		buildEmptyCards();
 		renderCards();

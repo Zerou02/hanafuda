@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Godot;
 
 public partial class GameOverScreen : Node2D
@@ -7,6 +8,8 @@ public partial class GameOverScreen : Node2D
 	public delegate void RematchClickedEventHandler();
 	[Signal]
 	public delegate void QuitClickedEventHandler();
+
+	public Button textButton;
 	public override void _Ready()
 	{
 		Visible = false;
@@ -17,6 +20,7 @@ public partial class GameOverScreen : Node2D
 
 	public void showScreen(bool isWinner, int points)
 	{
+		foreach (var x in GetChildren()) { x.QueueFree(); }
 		this.Visible = true;
 		var tex = new TextureRect();
 		AddChild(tex);
@@ -32,6 +36,7 @@ public partial class GameOverScreen : Node2D
 		label.Modulate = Color.FromHtml("#ff0000ff");
 		var rematchBtn = new Button();
 		rematchBtn.Text = "Nur noch eine Runde!";
+		textButton = rematchBtn;
 		var quitBtn = new Button();
 		quitBtn.Text = "Aufhören";
 		rematchBtn.Position = new Vector2(370, 250);

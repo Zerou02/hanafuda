@@ -12,22 +12,33 @@ public partial class KoiKoiSelection : Control
 
 	List<Node> children = new List<Node>();
 	PackedScene cardScn = GD.Load<PackedScene>("scenes/Card.tscn");
+	Label label;
 	public override void _Ready()
 	{
+		label = GetNode<Label>("Label");
 		koiKoiButton = GetNode<Button>("KoiKoiBtn");
 		stopButton = GetNode<Button>("StopBtn");
 		koiKoiButton.Pressed += () => { EmitSignal(SignalName.koiKoiPressed); this.Visible = false; };
 		stopButton.Pressed += () => { EmitSignal(SignalName.stopPressed); this.Visible = false; };
 		var example = new Dictionary<Sets, List<Card>>() { { Sets.Tsukimi, new List<Card>() { new Card(2, 0), new Card(2, 2) } }, { Sets.Hanami, new List<Card>() { new Card(3, 0), new Card(3, 2) } }, { Sets.Plain, new List<Card>() { new Card(4, 0), new Card(5, 0) } } };
-		setCards(example, 1);
 	}
 
 	public override void _Process(double delta)
 	{
 	}
 
-	public void setCards(Dictionary<Sets, List<Card>> cards, int amountKoiKois)
+	public void setCards(Dictionary<Sets, List<Card>> cards, int amountKoiKois, bool hasChoice)
 	{
+		koiKoiButton.Visible = hasChoice;
+		stopButton.Visible = hasChoice;
+		if (hasChoice)
+		{
+			label.Text = "Willst du Koi-Koi ausrufen!";
+		}
+		else
+		{
+			label.Text = "Gegner hat Koi-Koi!!";
+		}
 		var yCount = 0;
 		var paddingY = 10;
 		var length = this.Size.X * 0.6f;

@@ -5,9 +5,10 @@ using Godot;
 public partial class CardSummary : Node2D
 {
 	PackedScene cardScn = GD.Load<PackedScene>("scenes/Card.tscn");
-
+	AnimationManager animationManager;
 	public override void _Ready()
 	{
+		animationManager = GetNode<AnimationManager>(Constants.animationManagerPath);
 	}
 
 	public override void _Process(double delta)
@@ -28,7 +29,7 @@ public partial class CardSummary : Node2D
 		var combBtn = new Button();
 		var deckBtn = new Button();
 		var escapeButton = new Button();
-		combBtn.Text = "Combinations";
+		combBtn.Text = "Kombinationen";
 		deckBtn.Text = "Deck";
 		escapeButton.Text = "X";
 		this.AddChild(combBtn);
@@ -69,9 +70,10 @@ public partial class CardSummary : Node2D
 				var card = cardScn.Instantiate<CardScn>();
 				row.Add(card);
 				AddChild(card);
+				card.Position = new Vector2(-Constants.cardHeight, -Constants.cardWidth);
 				card.setCard(c);
 			}
-			Flexbox.alignLeft(new Rect2(i % columns * (rowWidth + paddingX), (Constants.cardHeight + paddingY) * (i / columns) + paddingTop, rowWidth, Constants.cardHeight), row);
+			Flexbox.alignLeftAnimated(new Rect2(i % columns * (rowWidth + paddingX), (Constants.cardHeight + paddingY) * (i / columns) + paddingTop, rowWidth, Constants.cardHeight), row, animationManager);
 			var label = new Label();
 			label.Text = Localization.germanMonthNames[i];
 			label.Position = new Vector2(i % columns * ((rowWidth + paddingX)), (Constants.cardHeight + paddingY) * (i / columns) + Constants.cardHeight + paddingTop);
@@ -91,7 +93,7 @@ public partial class CardSummary : Node2D
 		var cards = GameManager.calcCardsToSet(deck, sets);
 		var amountCard = new int[] { 10, 5, 5, 3, 3, 3, 2, 2, 3, 4, 4, 5 };
 		var text = new string[]{
-			"10 einfache Karten + 1 Punkt für jede zusätzliche",
+			"10 Ebenen + 1 Punkt für jede zusätzliche",
 			"5 Schriftrollen Karten + 1 Punkt für jede zusätzliche",
 			"5 Tiere + 1 Punkt für jedes zusätzliche",
 			"Alle 3 blauen Schriftrollen",
@@ -123,7 +125,14 @@ public partial class CardSummary : Node2D
 				if (count == amountCard[i]) { break; }
 				var z = cardScn.Instantiate<CardScn>();
 				AddChild(z);
-				z.setCard(y);
+				if ((x.Key == Sets.Plain && count == 9) || (x.Key == Sets.Animals && count == 4))
+				{
+					z.setCard(new Card(8, 3));
+				}
+				else
+				{
+					z.setCard(y);
+				}
 				row.Add(z);
 				Flexbox.alignLeft(new Rect2(i % columns * (rowWidth + paddingX), (i / columns) * (Constants.cardHeight + paddingY) + paddingTop, rowWidth, Constants.cardHeight), row);
 			}
@@ -152,7 +161,7 @@ public partial class CardSummary : Node2D
 		this.AddChild(sakeLabel);
 		sakeLabel.Position = new Vector2(100 + Constants.cardWidth + 10, 470);
 		sakeLabel.Size = new Vector2(300, 200);
-		sakeLabel.Text = "Der Becher ist der Joker. Er kann mit Tieren,einfachen Karten,dem Mond und Kirschblüten kombiniert werden";
+		sakeLabel.Text = "Der Becher ist der Joker. Er kann mit Tieren, Ebenen, dem Mond und Kirschblüten kombiniert werden";
 
 		var rainMan = cardScn.Instantiate<CardScn>();
 		this.AddChild(rainMan);

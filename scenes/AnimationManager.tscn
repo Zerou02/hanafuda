@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://wuakgmxj7nno"]
+
+[ext_resource type="Script" path="res://scripts/logic/AnimationManager.cs" id="1_jnm2o"]
+
+[node name="AnimationManager" type="Node"]
+script = ExtResource("1_jnm2o")
